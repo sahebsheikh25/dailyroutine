@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DayFlow — Daily Routine Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: rgba(255,255,255,0.07);
+    --accent: #7c6ff7;
+    --accent2: #f97316;
+    --accent3: #22d3ee;
+    --text: #f0f0fa;
+    --muted: #6b6b8a;
+    --success: #4ade80;
+    --card-done: rgba(74,222,128,0.06);
+    --card-done-border: rgba(74,222,128,0.2);
+    --glow: rgba(124,111,247,0.15);
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 16px;
+    --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  [data-theme="light"] {
+    --bg: #f4f3ff;
+    --surface: #ffffff;
+    --surface2: #ebe9ff;
+    --border: rgba(0,0,0,0.08);
+    --text: #1a1a2e;
+    --muted: #8888aa;
+    --glow: rgba(124,111,247,0.1);
+    --card-done: rgba(74,222,128,0.08);
+    --card-done-border: rgba(22,163,74,0.3);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.4;
+  }
+
+  /* ===== ONBOARDING MODAL ===== */
+  #onboarding {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(20px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.4s ease;
+  }
+  #onboarding.hidden { display: none; }
+
+  .onboard-box {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(124,111,247,0.03) 100%);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 90%; max-width: 420px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .onboard-box::before {
+    content: '';
+    position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 200px;
+    background: var(--accent);
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+    pointer-events: none;
+    animation: float 4s ease-in-out infinite;
+  }
+  .onboard-box::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.02), transparent);
+    animation: shimmer 3s infinite;
+  }
+  .onboard-emoji { 
+    font-size: 56px; 
+    margin-bottom: 16px; 
+    display: block; 
+    animation: float 3s ease-in-out infinite, fadeIn 0.6s ease 0.2s both;
+  }
+  .onboard-box h2 { 
+    font-family: var(--font-head); 
+    font-size: 28px; 
+    font-weight: 800; 
+    margin-bottom: 8px;
+    animation: slideUp 0.6s ease 0.3s both;
+  }
+  .onboard-box p { 
+    color: var(--muted); 
+    font-size: 15px; 
+    margin-bottom: 32px; 
+    line-height: 1.6;
+    animation: slideUp 0.6s ease 0.4s both;
+  }
+  .onboard-input {
+    width: 100%;
+    background: linear-gradient(135deg, var(--surface2) 0%, rgba(124,111,247,0.02) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--text);
+    outline: none;
+    transition: all var(--transition);
+    margin-bottom: 16px;
+    animation: slideUp 0.6s ease 0.5s both;
+  }
+  .onboard-input:focus { 
+    border-color: var(--accent); 
+    box-shadow: 0 0 0 4px var(--glow);
+    transform: translateY(-1px);
+  }
+  .onboard-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent) 0%, rgba(124,111,247,0.8) 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-family: var(--font-head);
+    font-size: 16px; font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.03em;
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.6s ease 0.6s both;
+  }
+  .onboard-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s ease;
+  }
+  .onboard-btn:hover::before {
+    left: 100%;
+  }
+  .onboard-btn:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 8px 24px rgba(124,111,247,0.4);
+    filter: brightness(1.1);
+  }
+  .onboard-btn:active { 
+    transform: translateY(0); 
+  }
+  .onboard-btn:active { transform: translateY(0); }
+
+  /* ===== LAYOUT ===== */
+  .app-wrapper {
+    position: relative; z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 20px 80px;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 16px;
+    animation: slideDown 0.6s ease both;
+  }
+  .logo {
+    font-family: var(--font-head); font-weight: 800; font-size: 22px;
+    display: flex; align-items: center; gap: 8px;
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .logo:hover {
+    transform: scale(1.05);
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+    animation: breathe 3s ease-in-out infinite;
+    box-shadow: 0 0 10px var(--accent);
+  }
+  .header-actions { display: flex; align-items: center; gap: 12px; animation: slideIn 0.6s ease both; }
+  .icon-btn {
+    width: 40px; height: 40px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .icon-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s ease;
+  }
+  .icon-btn:hover::before {
+    left: 100%;
+  }
+  .icon-btn:hover { 
+    background: var(--surface2); 
+    transform: translateY(-2px);
+    border-color: var(--accent); 
+    box-shadow: 0 4px 12px rgba(124,111,247,0.2);
+  }
+  .icon-btn:active {
+    transform: translateY(0);
+  }
+
+  /* ===== GREETING + CLOCK ===== */
+  .hero-section {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(124,111,247,0.03) 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+    position: relative; overflow: hidden;
+    animation: slideUp 0.6s ease 0.1s both;
+    transition: all var(--transition);
+  }
+  .hero-section:hover {
+    border-color: rgba(124,111,247,0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(124,111,247,0.1);
+  }
+  .hero-section::after {
+    content: '';
+    position: absolute; right: -40px; top: -40px;
+    width: 200px; height: 200px;
+    background: var(--accent);
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.08;
+    pointer-events: none;
+    transition: all 0.6s ease;
+  }
+  .hero-section:hover::after {
+    opacity: 0.12;
+    transform: scale(1.1);
+  }
+  .greeting { font-family: var(--font-head); font-size: clamp(20px, 4vw, 28px); font-weight: 700; }
+  .greeting span { 
+    color: var(--accent); 
+    animation: slideUp 0.6s ease 0.3s both;
+    display: inline-block;
+  }
+  .date-tag { 
+    color: var(--muted); 
+    font-size: 14px; 
+    margin-top: 4px; 
+    animation: fadeIn 0.6s ease 0.4s both;
+    transition: all var(--transition);
+  }
+  .date-tag:hover {
+    color: var(--text);
+  }
+  .clock-display {
+    font-family: var(--font-head); font-size: clamp(28px, 5vw, 42px);
+    font-weight: 800; letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: slideUp 0.6s ease 0.2s both;
+  }
+  .clock-label { 
+    font-size: 11px; 
+    color: var(--muted); 
+    text-align: right; 
+    text-transform: uppercase; 
+    letter-spacing: 0.1em;
+    animation: slideUp 0.6s ease 0.25s both;
+  }
+
+  /* ===== STATS ROW ===== */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+    animation: slideUp 0.6s ease 0.2s both;
+  }
+  @media (max-width: 600px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+
+  .stat-card {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(124,111,247,0.02) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 16px;
+    text-align: center;
+    transition: all var(--transition);
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transition: left 0.8s ease;
+  }
+  .stat-card:hover::before {
+    left: 100%;
+  }
+  .stat-card:hover { 
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 20px rgba(124,111,247,0.15);
+  }
+  .stat-value {
+    font-family: var(--font-head); font-size: 26px; font-weight: 800;
+    display: block; margin-bottom: 4px;
+    animation: fadeIn 0.6s ease 0.3s both;
+  }
+  .stat-label { 
+    font-size: 11px; 
+    color: var(--muted); 
+    text-transform: uppercase; 
+    letter-spacing: 0.08em;
+    animation: fadeIn 0.6s ease 0.4s both;
+  }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.orange { color: var(--accent2); }
+  .stat-value.cyan { color: var(--accent3); }
+  .stat-value.green { color: var(--success); }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-section {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(34,211,238,0.03) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    animation: slideUp 0.6s ease 0.3s both;
+    transition: all var(--transition);
+  }
+  .progress-section:hover {
+    border-color: rgba(34,211,238,0.3);
+    box-shadow: 0 8px 24px rgba(34,211,238,0.1);
+  }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .progress-title { font-family: var(--font-head); font-weight: 600; font-size: 15px; }
+  .progress-pct { 
+    font-family: var(--font-head); 
+    font-weight: 700; 
+    font-size: 18px; 
+    color: var(--accent3);
+    animation: slideUp 0.6s ease 0.4s both;
+  }
+  .progress-bar-bg {
+    height: 12px; 
+    background: var(--surface2); 
+    border-radius: 99px; 
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-bar-fill::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px;
+    background: var(--accent3);
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--accent3), 0 0 30px rgba(34,211,238,0.4);
+    animation: pulse 2s infinite;
+  }
+
+  /* ===== SECTION HEADERS ===== */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; margin-top: 8px;
+    animation: slideUp 0.6s ease 0.3s both;
+  }
+  .section-title {
+    font-family: var(--font-head); font-weight: 700; font-size: 17px;
+    display: flex; align-items: center; gap: 8px;
+    animation: fadeIn 0.6s ease 0.4s both;
+  }
+  .section-title span:first-child {
+    animation: float 3s ease-in-out infinite;
+    display: inline-block;
+  }
+  .section-badge {
+    background: linear-gradient(135deg, var(--surface2) 0%, rgba(124,111,247,0.05) 100%);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 2px 10px;
+    font-size: 12px; font-weight: 600;
+    color: var(--muted);
+    font-family: var(--font-body);
+    transition: all var(--transition);
+  }
+  .section-badge:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(1.05);
+  }
+
+  /* ===== TASK CARDS ===== */
+  .tasks-grid {
+    display: grid;
+    gap: 16px;
+    animation: slideUp 0.6s ease 0.4s both;
+  }
+
+  .task-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "left center right";
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.5s ease both;
+    user-select: none;
+    min-height: 64px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    will-change: transform;
+  }
+  .task-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(124,111,247,0.2), rgba(34,211,238,0.2), rgba(249,115,22,0.2));
+    border-radius: inherit;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .task-card:hover::before {
+    opacity: 1;
+  }
+  .task-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(124,111,247,0.1);
+  }
+  .task-card.done {
+    background: rgba(74, 222, 128, 0.08);
+    border-color: rgba(74, 222, 128, 0.2);
+  }
+  .task-card.done:hover {
+    background: rgba(74, 222, 128, 0.12);
+    box-shadow: 0 8px 24px rgba(74, 222, 128, 0.15);
+  }
+  .task-card.active-now {
+    background: rgba(249, 115, 22, 0.06);
+    border-color: rgba(249, 115, 22, 0.3);
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
+    animation: glowPulse 2s ease-in-out infinite;
+  }
+  .task-card.custom-task {
+    border-left: 3px solid var(--accent3);
+  }
+
+  /* Left Side: Checkbox + Icon */
+  .task-left {
+    grid-area: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .task-check {
+    width: 20px; height: 20px; flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .task-card.done .task-check {
+    background: var(--success);
+    border-color: var(--success);
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(74,222,128,0.4);
+  }
+
+  /* Center: Task Content */
+  .task-center {
+    grid-area: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .task-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  /* Task Icon */
+  .task-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .task-card:hover .task-icon {
+    transform: scale(1.1) rotate(5deg);
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 4px 12px rgba(124,111,247,0.3);
+  }
+
+  .task-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .task-time {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .task-card.active-now .task-time {
+    color: var(--accent2);
+  }
+
+  .task-name {
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: clamp(14px, 2.5vw, 16px);
+    line-height: 1.3;
+    transition: color 0.2s ease;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    color: var(--text);
+    margin: 0;
+  }
+.task-card.done .task-name {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--success);
+  }
+
+  .task-details {
+    font-size: clamp(12px, 2vw, 13px);
+    color: var(--muted);
+    line-height: 1.4;
+    transition: color 0.2s ease;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0;
+  }
+  .task-card.done .task-details {
+    color: rgba(107,107,138,0.7);
+  }
+
+  .task-tag {
+    grid-area: tag;
+    background: linear-gradient(135deg, var(--surface2) 0%, rgba(124,111,247,0.05) 100%);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 11px; font-weight: 600;
+    flex-shrink: 0;
+    transition: all var(--transition);
+    align-self: center;
+    white-space: nowrap;
+  }
+  .task-card.active-now .task-tag {
+    background: linear-gradient(135deg, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.25) 100%);
+    color: var(--accent2);
+    border-color: rgba(249,115,22,0.3);
+    box-shadow: 0 0 10px rgba(249,115,22,0.2);
+  }
+
+  .task-delete {
+    grid-area: delete;
+    width: 32px; height: 32px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; border-radius: 8px; font-size: 16px;
+    transition: all var(--transition);
+    align-self: center;
+  }
+  .task-delete:hover {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239,68,68,0.2);
+  }
+
+  /* Right: Task Actions */
+  .task-right {
+    grid-area: right;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  /* ===== ADD TASK ===== */
+  .add-task-section {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(124,111,247,0.02) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 24px;
+    animation: slideUp 0.5s ease 0.5s both;
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition);
+  }
+  .add-task-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.02), transparent);
+    transition: left 0.8s ease;
+  }
+  .add-task-section:hover::before {
+    left: 100%;
+  }
+  .add-task-section:hover {
+    border-color: rgba(124,111,247,0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(124,111,247,0.1);
+  }
+  .add-task-title { 
+    font-family: var(--font-head); 
+    font-weight: 700; 
+    font-size: 15px; 
+    margin-bottom: 14px;
+    animation: fadeIn 0.6s ease 0.6s both;
+  }
+  .add-task-form { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 10px;
+    animation: slideUp 0.5s ease 0.7s both;
+  }
+  .add-input {
+    flex: 1; min-width: 140px;
+    background: linear-gradient(135deg, var(--surface2) 0%, rgba(124,111,247,0.02) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--text); outline: none;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .add-input::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transition: left 0.6s ease;
+  }
+  .add-input:focus::before {
+    left: 100%;
+  }
+  .add-input:focus { 
+    border-color: var(--accent); 
+    box-shadow: 0 0 0 3px var(--glow);
+    transform: translateY(-1px);
+  }
+  .add-btn {
+    background: linear-gradient(135deg, var(--accent) 0%, rgba(124,111,247,0.8) 100%);
+    color: #fff; border: none; border-radius: 10px;
+    padding: 11px 20px;
+    font-family: var(--font-head); font-weight: 700; font-size: 14px;
+    cursor: pointer; white-space: nowrap;
+    transition: all var(--transition);
+    letter-spacing: 0.02em;
+    position: relative;
+    overflow: hidden;
+  }
+  .add-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s ease;
+  }
+  .add-btn:hover::before {
+    left: 100%;
+  }
+  .add-btn:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 20px rgba(124,111,247,0.4);
+    filter: brightness(1.1);
+  }
+  .add-btn:active {
+    transform: translateY(0);
+  }
+
+  /* ===== RESET BUTTON ===== */
+  .bottom-actions { 
+    display: flex; 
+    justify-content: center; 
+    gap: 12px; 
+    margin-top: 32px; 
+    flex-wrap: wrap;
+    animation: slideUp 0.5s ease 0.8s both;
+  }
+  .outline-btn {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(124,111,247,0.02) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-family: var(--font-head); font-weight: 600; font-size: 13px;
+    color: var(--muted); cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.02em;
+    position: relative;
+    overflow: hidden;
+  }
+  .outline-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transition: left 0.6s ease;
+  }
+  .outline-btn:hover::before {
+    left: 100%;
+  }
+  .outline-btn:hover { 
+    border-color: var(--accent); 
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(124,111,247,0.2);
+    background: linear-gradient(135deg, rgba(124,111,247,0.05) 0%, rgba(124,111,247,0.1) 100%);
+  }
+  .outline-btn:active {
+    transform: translateY(0);
+  }
+
+  /* ===== TOAST / POPUP ===== */
+  #toast-container {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none;
+  }
+  .toast {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(255,255,255,0.02) 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-family: var(--font-head); font-weight: 600; font-size: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    display: flex; align-items: center; gap: 10px;
+    white-space: nowrap;
+    pointer-events: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .toast::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.8s ease;
+  }
+  .toast.success { 
+    border-color: rgba(74,222,128,0.4); 
+    color: var(--success);
+    box-shadow: 0 8px 32px rgba(74,222,128,0.2);
+  }
+  .toast.success::before {
+    background: linear-gradient(90deg, transparent, rgba(74,222,128,0.2), transparent);
+  }
+  .toast.info { 
+    border-color: var(--accent); 
+    color: var(--accent);
+    box-shadow: 0 8px 32px rgba(124,111,247,0.2);
+  }
+  .toast.info::before {
+    background: linear-gradient(90deg, transparent, rgba(124,111,247,0.2), transparent);
+  }
+  .toast.out { 
+    animation: toastOut 0.3s ease forwards; 
+  }
+  .toast.out::before {
+    left: 100%;
+  }
+
+  /* ===== ACTIVE INDICATOR ===== */
+  .now-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(249,115,22,0.15);
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 99px;
+    padding: 2px 8px;
+    font-size: 10px; font-weight: 700; color: var(--accent2);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .now-dot {
+    width: 6px; height: 6px;
+    background: var(--accent2); border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+  @keyframes slideUp {
+    from { opacity:0; transform: translateY(20px) }
+    to { opacity:1; transform: translateY(0) }
+  }
+  @keyframes slideDown {
+    from { opacity:0; transform: translateY(-20px) }
+    to { opacity:1; transform: translateY(0) }
+  }
+  @keyframes slideIn {
+    from { opacity:0; transform: translateX(-20px) }
+    to { opacity:1; transform: translateX(0) }
+  }
+  @keyframes cardIn {
+    from { opacity:0; transform: translateX(-16px) scale(0.98) }
+    to { opacity:1; transform: translateX(0) scale(1) }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) }
+    50% { transform: translateY(-8px) }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity:1; transform: scale(1) }
+    50% { opacity:0.6; transform: scale(0.9) }
+  }
+  @keyframes checkPop {
+    0% { transform: scale(1) }
+    40% { transform: scale(1.3) }
+    70% { transform: scale(0.9) }
+    100% { transform: scale(1.1) }
+  }
+  @keyframes toastIn {
+    from { opacity:0; transform: translateY(16px) scale(0.95) }
+    to { opacity:1; transform: translateY(0) scale(1) }
+  }
+  @keyframes toastOut {
+    from { opacity:1; transform: translateY(0) scale(1) }
+    to { opacity:0; transform: translateY(8px) scale(0.95) }
+  }
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(249,115,22,0.3), 0 0 40px rgba(249,115,22,0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(249,115,22,0.5), 0 0 60px rgba(249,115,22,0.2);
+    }
+  }
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes iconBounce {
+    0%, 100% { transform: scale(1) }
+    50% { transform: scale(1.15) }
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+  }
+  @keyframes slideInRight {
+    from { opacity:0; transform: translateX(20px) }
+    to { opacity:1; transform: translateX(0) }
+  }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 768px) {
+    .app-wrapper { padding: 16px 12px 72px; }
+    .hero-section { flex-direction: column; align-items: flex-start; padding: 18px; }
+    .clock-display { font-size: clamp(24px, 4vw, 32px); text-align: left; }
+    .stats-row { gap: 10px; }
+    .stat-card { padding: 16px 12px; }
+    .task-card {
+      padding: 16px;
+      gap: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-height: auto;
+    }
+    .task-card .task-check { align-self: flex-start; margin-bottom: 8px; }
+    .task-card .task-content { width: 100%; }
+    .task-card .task-tag { align-self: flex-end; margin-top: 8px; }
+    .task-card .task-delete { align-self: flex-end; }
+    .add-task-form { flex-direction: column; }
+    .add-input, .add-btn { width: 100%; }
+    .task-details { display: none; }
+    .logo { font-size: 18px; }
+    header { margin-bottom: 24px; gap: 8px; }
+    .section-header { margin-top: 20px; }
+  }
+
+  @media (max-width: 480px) {
+    .app-wrapper { padding: 12px 10px 72px; }
+    .hero-section { padding: 16px; }
+    .greeting { font-size: 18px; }
+    .clock-display { font-size: 24px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat-card { padding: 14px 10px; border-radius: 12px; }
+    .stat-value { font-size: 22px; }
+    .stat-label { font-size: 10px; }
+    .task-card { padding: 14px; gap: 10px; }
+    .task-check { width: 24px; height: 24px; font-size: 14px; }
+    .task-name { font-size: clamp(13px, 3vw, 15px); }
+    .task-time { font-size: 10px; }
+    .task-icon { font-size: 20px; width: 26px; height: 26px; }
+    .onboard-box { padding: 32px 20px; width: 90%; }
+    .onboard-box h2 { font-size: 22px; }
+    .onboard-input { font-size: 14px; padding: 12px; }
+    .onboard-btn { padding: 12px; font-size: 14px; }
+    .add-task-section { padding: 16px; }
+    .add-btn { padding: 12px 16px; }
+    .bottom-actions { flex-direction: column; }
+    .outline-btn { width: 100%; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+  /* Stagger cards */
+  .task-card:nth-child(1) { animation-delay: 0.05s }
+  .task-card:nth-child(2) { animation-delay: 0.10s }
+  .task-card:nth-child(3) { animation-delay: 0.15s }
+  .task-card:nth-child(4) { animation-delay: 0.20s }
+  .task-card:nth-child(5) { animation-delay: 0.25s }
+  .task-card:nth-child(6) { animation-delay: 0.30s }
+  .task-card:nth-child(7) { animation-delay: 0.35s }
+  .task-card:nth-child(8) { animation-delay: 0.40s }
+  .task-card:nth-child(9) { animation-delay: 0.45s }
+  .task-card:nth-child(10) { animation-delay: 0.50s }
+  .task-card:nth-child(11) { animation-delay: 0.55s }
+  .task-card:nth-child(12) { animation-delay: 0.60s }
+  .task-card:nth-child(13) { animation-delay: 0.65s }
+
+  .streak-fire { animation: float 2s ease-in-out infinite; display:inline-block; }
+</style>
+</head>
+<body>
+
+<!-- Onboarding -->
+<div id="onboarding">
+  <div class="onboard-box">
+    <span class="onboard-emoji">🚀</span>
+    <h2>Welcome to DayFlow</h2>
+    <p>Your personal daily routine tracker. Let's start by getting to know you!</p>
+    <input class="onboard-input" id="name-input" type="text" placeholder="Enter your name..." maxlength="30" autofocus>
+    <div id="login-error" style="color: var(--accent2); font-size: 12px; margin-top: 8px; display: none;"></div>
+    <button class="onboard-btn" onclick="startApp()" style="margin-top: 12px;">Let's Crush Today →</button>
+    <p style="font-size: 12px; color: var(--muted); margin-top: 20px; border-top: 1px solid var(--border); padding-top: 12px;">
+      🔐 Your data is saved locally in your browser. No account needed!
+    </p>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- App -->
+<div class="app-wrapper">
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <span class="logo-dot"></span> DayFlow
+    </div>
+    <div class="header-actions">
+      <div class="icon-btn" title="Toggle theme" onclick="toggleTheme()">☀️</div>
+      <div class="icon-btn" title="Change name" onclick="changeUser()">👤</div>
+      <div class="icon-btn" title="Reset today" onclick="confirmReset()">🔄</div>
+      <div class="icon-btn" title="Logout" onclick="logout()" style="color: var(--accent2);">🚪</div>
+    </div>
+  </header>
+
+  <!-- Hero / Greeting -->
+  <div class="hero-section">
+    <div>
+      <div class="greeting" id="greeting">Good Morning, <span id="user-name">Friend</span> 👋</div>
+      <div class="date-tag" id="date-tag">Loading...</div>
+    </div>
+    <div style="text-align:right">
+      <div class="clock-display" id="clock">00:00:00</div>
+      <div class="clock-label">Live Clock</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-value accent" id="stat-done">0</span>
+      <span class="stat-label">Done</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value orange" id="stat-remaining">0</span>
+      <span class="stat-label">Remaining</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value cyan" id="stat-score">0</span>
+      <span class="stat-label">Score</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value green" id="stat-streak">0 <span class="streak-fire">🔥</span></span>
+      <span class="stat-label">Streak</span>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-section">
+    <div class="progress-header">
+      <span class="progress-title">Today's Progress</span>
+      <span class="progress-pct" id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Predefined Tasks -->
+  <div class="section-header">
+    <div class="section-title">
+      📋 Daily Routine
+      <span class="section-badge" id="predefined-count">13 tasks</span>
+    </div>
+  </div>
+  <div class="tasks-grid" id="predefined-tasks"></div>
+
+  <!-- Custom Tasks -->
+  <div class="section-header" style="margin-top:28px">
+    <div class="section-title">
+      ✨ My Tasks
+      <span class="section-badge" id="custom-count">0 tasks</span>
+    </div>
+  </div>
+  <div class="tasks-grid" id="custom-tasks">
+    <div style="color:var(--muted); font-size:14px; padding:12px 0; text-align:center;" id="empty-custom">No custom tasks yet. Add one below!</div>
+  </div>
+
+  <!-- Add Task -->
+  <div class="add-task-section">
+    <div class="add-task-title">+ Add Custom Task</div>
+    <div class="add-task-form">
+      <input class="add-input" id="new-task-name" placeholder="Task name..." maxlength="60">
+      <input class="add-input" id="new-task-time" placeholder="Time (e.g. 4:00 PM)" maxlength="30" style="max-width:180px">
+      <input class="add-input" id="new-task-details" placeholder="Details (optional)" maxlength="80">
+      <button class="add-btn" onclick="addCustomTask()">Add Task</button>
+    </div>
+  </div>
+
+  <!-- Bottom Actions -->
+  <div class="bottom-actions">
+    <button class="outline-btn" onclick="confirmReset()">🔄 Reset Today's Progress</button>
+    <button class="outline-btn" onclick="exportSummary()">📋 Copy Summary</button>
+    <button class="outline-btn" onclick="exportAllData()">📊 Export All Data</button>
+    <button class="outline-btn" onclick="viewActivityLog()">📜 Activity Log</button>
+  </div>
+</div>
+
+<script>
+// =========== SOUND EFFECTS ===========
+function playSuccessSound() {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioContext.currentTime;
+    
+    // Success melody - ascending tones
+    const notes = [
+      { freq: 523.25, duration: 0.1, time: now },      // C5
+      { freq: 659.25, duration: 0.1, time: now + 0.1 }, // E5
+      { freq: 783.99, duration: 0.2, time: now + 0.2 }, // G5
+    ];
+    
+    notes.forEach(note => {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      
+      osc.frequency.value = note.freq;
+      osc.type = 'sine';
+      
+      gain.gain.setValueAtTime(0.3, note.time);
+      gain.gain.exponentialRampToValueAtTime(0.01, note.time + note.duration);
+      
+      osc.start(note.time);
+      osc.stop(note.time + note.duration);
+    });
+  } catch(e) {}
+}
+
+function playClickSound() {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioContext.currentTime;
+    
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+    osc.type = 'sine';
+    
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    
+    osc.start(now);
+    osc.stop(now + 0.1);
+  } catch(e) {}
+}
+
+// =========== DATA ===========
+const PREDEFINED = [
+  { id:'p1', time:'7:00 AM – 7:30 AM',   name:'Morning Routine',          details:'Wake up, brush, freshen up, drink water',     start:[7,0],  end:[7,30],   icon:'🌅'},
+  { id:'p2', time:'7:30 AM – 9:00 AM',   name:'Research Methodology',     details:'Theory, definitions, PYQ, short notes',       start:[7,30], end:[9,0],    icon:'📚'},
+  { id:'p3', time:'9:00 AM – 10:00 AM',  name:'Bath + Puja',              details:'Bath, puja, refresh mind',                    start:[9,0],  end:[10,0],   icon:'🛁'},
+  { id:'p4', time:'10:00 AM – 10:30 AM', name:'Breakfast',                details:'Healthy breakfast',                           start:[10,0], end:[10,30],  icon:'🍽️'},
+  { id:'p5', time:'10:30 AM – 12:20 PM', name:'Database Management Systems', details:'Lecture, SQL, ER model, normalization',   start:[10,30],end:[12,20],  icon:'🗄️'},
+  { id:'p6', time:'12:20 PM – 1:00 PM',  name:'Lunch + Rest',             details:'Lunch and short rest',                        start:[12,20],end:[13,0],   icon:'🥘'},
+  { id:'p7', time:'1:00 PM – 2:30 PM',   name:'Networking Session',       details:'OSI, TCP/IP, routing, subnetting',            start:[13,0], end:[14,30],  icon:'🌐'},
+  { id:'p8', time:'2:30 PM – 3:30 PM',   name:'Rest / Refresh',           details:'Relax and refresh',                           start:[14,30],end:[15,30],  icon:'☕'},
+  { id:'p9', time:'3:30 PM – 4:30 PM',   name:'Kali Linux Practice',      details:'Nmap, Nikto, Burp Suite, Hydra',              start:[15,30],end:[16,30],  icon:'🖥️'},
+  { id:'p10',time:'5:00 PM – 6:00 PM',   name:'Workout',                  details:'Exercise and cardio',                         start:[17,0], end:[18,0],   icon:'💪'},
+  { id:'p11',time:'6:00 PM – 7:00 PM',   name:'Bath + Rest',              details:'Refresh after workout',                       start:[18,0], end:[19,0],   icon:'🚿'},
+  { id:'p12',time:'8:00 PM – 9:30 PM',   name:'Class / Study Session',    details:'Revision and cybersecurity learning',         start:[20,0], end:[21,30],  icon:'👨‍💻'},
+  { id:'p13',time:'After 9:30 PM',        name:'Sleep',                    details:'Avoid late-night scrolling 🌙',               start:[21,30],end:[24,0],   icon:'😴'},
+];
+
+// =========== STATE ===========
+let state = {
+  userName: '',
+  theme: 'dark',
+  completedIds: [],
+  customTasks: [],
+  streak: 0,
+  lastCompletedDate: '',
+};
+
+// Activity Log - Track all activities
+let activityLog = [];
+const ACTIVITY_LOG_KEY = 'dayflow_activity_log';
+const STATE_BACKUP_KEY = 'dayflow_state_backup';
+
+function loadActivityLog() {
+  const raw = localStorage.getItem(ACTIVITY_LOG_KEY);
+  activityLog = raw ? JSON.parse(raw) : [];
+}
+
+function saveActivityLog() {
+  localStorage.setItem(ACTIVITY_LOG_KEY, JSON.stringify(activityLog));
+}
+
+function logActivity(action, details = {}) {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    date: new Date().toLocaleDateString(),
+    time: new Date().toLocaleTimeString(),
+    action: action,
+    user: state.userName,
+    ...details
+  };
+  activityLog.push(logEntry);
+  saveActivityLog();
+  // Keep only last 500 activities
+  if (activityLog.length > 500) {
+    activityLog = activityLog.slice(-500);
+    saveActivityLog();
+  }
+}
+
+function saveState() { 
+  localStorage.setItem('dayflow_v2', JSON.stringify(state));
+  // Also save backup
+  localStorage.setItem(STATE_BACKUP_KEY, JSON.stringify({
+    backup: state,
+    timestamp: new Date().toISOString(),
+    backup_date: new Date().toLocaleDateString()
+  }));
+}
+
+function loadState() {
+  // First check if user is logged in from login page
+  const currentUser = localStorage.getItem('dayflow_current_user');
+  if (currentUser) {
+    try {
+      const user = JSON.parse(currentUser);
+      state.userName = user.name;
+    } catch(e) {}
+  }
+  
+  const raw = localStorage.getItem('dayflow_v2');
+  if (raw) try { state = { ...state, ...JSON.parse(raw) }; } catch(e) {}
+  
+  loadActivityLog();
+}
+
+// =========== INIT ===========
+loadState();
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  
+  // Check if user is logged in
+  if (!state.userName) {
+    // Redirect to login if not logged in
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  if (state.userName) {
+    document.getElementById('onboarding').classList.add('hidden');
+    initApp();
+  } else {
+    document.getElementById('onboarding').classList.remove('hidden');
+    document.getElementById('name-input').addEventListener('keydown', e => { if(e.key==='Enter') startApp(); });
+  }
+  applyTheme();
+  startClock();
+  checkDayReset();
+});
+
+function startApp() {
+  const name = document.getElementById('name-input').value.trim();
+  const errorEl = document.getElementById('login-error');
+  
+  if (!name) { 
+    document.getElementById('name-input').style.borderColor='var(--accent2)'; 
+    errorEl.textContent = '❌ Please enter your name to continue';
+    errorEl.style.display = 'block';
+    return; 
+  }
+  
+  if (name.length < 2) {
+    document.getElementById('name-input').style.borderColor='var(--accent2)'; 
+    errorEl.textContent = '❌ Name must be at least 2 characters';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  errorEl.style.display = 'none';
+  document.getElementById('name-input').style.borderColor = '';
+  state.userName = name;
+  saveState();
+  document.getElementById('onboarding').classList.add('hidden');
+  initApp();
+}
+
+function initApp() {
+  document.getElementById('user-name').textContent = state.userName;
+  updateGreeting();
+  renderTasks();
+  updateStats();
+  applyTheme();
+  logActivity('user_login', { loginTime: new Date().toLocaleTimeString() });
+}
+
+// =========== CLOCK ===========
+function startClock() {
+  function tick() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+    updateGreeting();
+    highlightActiveTask();
+  }
+  tick(); setInterval(tick, 1000);
+
+  // Date
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('date-tag').textContent = new Date().toLocaleDateString('en-IN', opts);
+}
+
+function updateGreeting() {
+  const h = new Date().getHours();
+  let emoji = '👋', word = 'Hello';
+  if (h >= 5  && h < 12) { word = 'Good Morning';  emoji = '🌅'; }
+  else if (h >= 12 && h < 17) { word = 'Good Afternoon'; emoji = '☀️'; }
+  else if (h >= 17 && h < 21) { word = 'Good Evening'; emoji = '🌆'; }
+  else { word = 'Good Night'; emoji = '🌙'; }
+  document.getElementById('greeting').innerHTML = `${word}, <span id="user-name">${state.userName}</span> ${emoji}`;
+}
+
+// =========== DAY RESET CHECK ===========
+function checkDayReset() {
+  const today = new Date().toDateString();
+  const lastDate = state.lastCompletedDate;
+  if (lastDate && lastDate !== today) {
+    // New day — check streak
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toDateString();
+    if (lastDate === yStr) {
+      // Completed yesterday → increment streak
+    } else {
+      state.streak = 0;
+    }
+    state.completedIds = [];
+    saveState();
+  }
+}
+
+// =========== RENDER ===========
+function renderTasks() {
+  renderPredefined();
+  renderCustom();
+}
+
+function renderPredefined() {
+  const container = document.getElementById('predefined-tasks');
+  container.innerHTML = '';
+  PREDEFINED.forEach((t, i) => {
+    const done = state.completedIds.includes(t.id);
+    const active = isActiveNow(t);
+    const card = document.createElement('div');
+    card.className = `task-card${done?' done':''}${active&&!done?' active-now':''}`;
+    card.style.animationDelay = (i * 0.04) + 's';
+    card.innerHTML = `
+      <div class="task-left">
+        <div class="task-check">${done ? '✓' : ''}</div>
+        <div class="task-icon">${t.icon}</div>
+      </div>
+      <div class="task-center">
+        <div class="task-info">
+          <div class="task-time">${t.time}</div>
+          <div class="task-name">${t.name}</div>
+          <div class="task-details">${t.details}</div>
+        </div>
+      </div>
+      <div class="task-right">
+        ${active&&!done ? '<div class="now-pill"><span class="now-dot"></span>NOW</div>' : ''}
+        ${done ? '<div class="task-tag" style="color:var(--success);border-color:rgba(74,222,128,0.3)">✓ Done</div>' : ''}
+      </div>
+    `;
+    card.addEventListener('click', () => toggleTask(t.id, card));
+    container.appendChild(card);
+  });
+  document.getElementById('predefined-count').textContent = `${PREDEFINED.length} tasks`;
+}
+
+function renderCustom() {
+  const container = document.getElementById('custom-tasks');
+  const empty = document.getElementById('empty-custom');
+  container.innerHTML = '';
+  if (state.customTasks.length === 0) {
+    empty && container.appendChild(empty);
+    document.getElementById('custom-count').textContent = '0 tasks';
+    return;
+  }
+  document.getElementById('custom-count').textContent = `${state.customTasks.length} tasks`;
+  state.customTasks.forEach((t, i) => {
+    const done = state.completedIds.includes(t.id);
+    const card = document.createElement('div');
+    card.className = `task-card custom-task${done?' done':''}`;
+    card.style.animationDelay = (i * 0.04) + 's';
+    card.innerHTML = `
+      <div class="task-left">
+        <div class="task-check">${done ? '✓' : ''}</div>
+      </div>
+      <div class="task-center">
+        <div class="task-info">
+          ${t.time ? `<div class="task-time">${t.time}</div>` : ''}
+          <div class="task-name">${t.name}</div>
+          ${t.details ? `<div class="task-details">${t.details}</div>` : ''}
+        </div>
+      </div>
+      <div class="task-right">
+        <button class="task-delete" onclick="deleteCustomTask('${t.id}', event)" title="Delete">✕</button>
+      </div>
+    `;
+    card.addEventListener('click', () => toggleTask(t.id, card));
+    container.appendChild(card);
+  });
+}
+
+// =========== TOGGLE TASK ===========
+function toggleTask(id, cardEl) {
+  const wasDone = state.completedIds.includes(id);
+  const taskName = [...PREDEFINED, ...state.customTasks].find(t=>t.id===id)?.name || 'Task';
+  
+  if (wasDone) {
+    playClickSound();
+    state.completedIds = state.completedIds.filter(x => x !== id);
+    cardEl.classList.remove('done');
+    cardEl.querySelector('.task-check').textContent = '';
+    showToast('Task unchecked', 'info', '↩️');
+    logActivity('task_unchecked', { taskId: id, taskName: taskName });
+  } else {
+    playSuccessSound();
+    state.completedIds.push(id);
+    cardEl.classList.add('done');
+    cardEl.classList.remove('active-now');
+    cardEl.querySelector('.task-check').textContent = '✓';
+    cardEl.querySelector('.task-check').style.animation = 'checkPop 0.4s ease';
+    setTimeout(() => { if(cardEl.querySelector('.task-check')) cardEl.querySelector('.task-check').style.animation = ''; }, 500);
+    
+    logActivity('task_completed', { taskId: id, taskName: taskName });
+    
+    const allIds = [...PREDEFINED.map(t=>t.id), ...state.customTasks.map(t=>t.id)];
+    const donePct = Math.round(state.completedIds.length / allIds.length * 100);
+    if (donePct === 100) {
+      showToast(`🎉 Congratulations ${state.userName}! ALL TASKS COMPLETE! Amazing!`, 'success', '🏆');
+      fireConfetti();
+      state.streak++;
+      state.lastCompletedDate = new Date().toDateString();
+      logActivity('all_tasks_completed', { completionDate: new Date().toLocaleDateString(), streak: state.streak });
+    } else {
+      showToast(`✨ ${state.userName}, great job! "${taskName}" done!`, 'success', '✅');
+      if (Math.random() < 0.15) fireConfetti(true);
+    }
+  }
+  saveState();
+  updateStats();
+  renderTasks();
+}
+
+// =========== STATS ===========
+function updateStats() {
+  const allIds = [...PREDEFINED.map(t=>t.id), ...state.customTasks.map(t=>t.id)];
+  const total = allIds.length;
+  const done = state.completedIds.filter(id => allIds.includes(id)).length;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  const score = Math.round(pct * 10);
+
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-remaining').textContent = total - done;
+  document.getElementById('stat-score').textContent = score;
+  document.getElementById('stat-streak').innerHTML = `${state.streak} <span class="streak-fire">🔥</span>`;
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+// =========== ACTIVE TASK ===========
+function isActiveNow(task) {
+  if (!task.start || !task.end) return false;
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const startMins = task.start[0] * 60 + task.start[1];
+  const endMins   = task.end[0]   * 60 + task.end[1];
+  return nowMins >= startMins && nowMins < endMins;
+}
+
+function highlightActiveTask() {
+  document.querySelectorAll('#predefined-tasks .task-card').forEach((card, i) => {
+    const t = PREDEFINED[i];
+    const done = state.completedIds.includes(t.id);
+    if (!done && isActiveNow(t)) card.classList.add('active-now');
+    else card.classList.remove('active-now');
+  });
+}
+
+// =========== CUSTOM TASKS ===========
+function addCustomTask() {
+  const name = document.getElementById('new-task-name').value.trim();
+  if (!name) { document.getElementById('new-task-name').style.borderColor='var(--accent2)'; return; }
+  const time = document.getElementById('new-task-time').value.trim();
+  const details = document.getElementById('new-task-details').value.trim();
+  const id = 'c' + Date.now();
+  state.customTasks.push({ id, name, time, details });
+  document.getElementById('new-task-name').value = '';
+  document.getElementById('new-task-time').value = '';
+  document.getElementById('new-task-details').value = '';
+  document.getElementById('new-task-name').style.borderColor = '';
+  saveState();
+  renderCustom();
+  updateStats();
+  showToast('Custom task added!', 'info', '✨');
+  logActivity('custom_task_added', { taskId: id, taskName: name, taskTime: time, taskDetails: details });
+}
+
+function deleteCustomTask(id, e) {
+  e.stopPropagation();
+  const task = state.customTasks.find(t => t.id === id);
+  state.customTasks = state.customTasks.filter(t => t.id !== id);
+  state.completedIds = state.completedIds.filter(x => x !== id);
+  saveState();
+  renderCustom();
+  updateStats();
+  showToast('Task removed', 'info', '🗑️');
+  logActivity('custom_task_deleted', { taskId: id, taskName: task?.name || 'Unknown' });
+}
+
+// Enter key for add
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement.classList.contains('add-input')) {
+    addCustomTask();
+  }
+});
+
+// =========== THEME ===========
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(); 
+  saveState();
+  logActivity('theme_changed', { newTheme: state.theme });
+}
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.querySelector('[title="Toggle theme"]').textContent = state.theme === 'dark' ? '☀️' : '🌙';
+}
+
+// =========== LOGOUT ===========
+function logout() {
+  if (confirm('Are you sure you want to logout?')) {
+    logActivity('user_logout', { logoutTime: new Date().toLocaleTimeString() });
+    saveState();
+    localStorage.removeItem('dayflow_current_user');
+    window.location.href = 'index.html';
+  }
+}
+
+// =========== RESET ===========
+function changeUser() {
+  const newName = prompt(`What's your name, ${state.userName}?`, state.userName);
+  if (newName && newName.trim().length >= 2) {
+    const oldName = state.userName;
+    state.userName = newName.trim();
+    saveState();
+    document.getElementById('user-name').textContent = state.userName;
+    updateGreeting();
+    showToast(`Welcome back, ${state.userName}! 👋`, 'success', '✨');
+    logActivity('user_name_changed', { oldName: oldName, newName: state.userName });
+  } else if (newName) {
+    showToast('❌ Name must be at least 2 characters', 'info', '⚠️');
+  }
+}
+
+function confirmReset() {
+  if (confirm('Reset all completed tasks for today?')) {
+    const tasksCount = state.completedIds.length;
+    state.completedIds = [];
+    saveState();
+    renderTasks();
+    updateStats();
+    showToast('Progress reset!', 'info', '🔄');
+    logActivity('daily_reset', { tasksReset: tasksCount });
+  }
+}
+
+// =========== EXPORT ===========
+function exportSummary() {
+  const done = state.completedIds.length;
+  const total = PREDEFINED.length + state.customTasks.length;
+  const allTasks = [...PREDEFINED, ...state.customTasks];
+  const completedNames = state.completedIds.map(id => allTasks.find(t=>t.id===id)?.name).filter(Boolean);
+  const text = `📋 DayFlow Summary — ${new Date().toLocaleDateString()}\n👤 ${state.userName}\n✅ ${done}/${total} tasks done (${Math.round(done/total*100)}%)\n🔥 Streak: ${state.streak}\n\n✅ Completed:\n${completedNames.map(n=>`• ${n}`).join('\n')}`;
+  navigator.clipboard.writeText(text).then(() => showToast('Summary copied!', 'success', '📋')).catch(() => showToast('Copy failed', 'info', '⚠️'));
+  logActivity('summary_exported', { completedCount: done, totalTasks: total });
+}
+
+function exportAllData() {
+  const exportData = {
+    user: state.userName,
+    exportDate: new Date().toISOString(),
+    exportDateFormatted: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+    state: state,
+    activityLog: activityLog,
+    statistics: {
+      totalTasksCompleted: state.completedIds.length,
+      totalTasks: PREDEFINED.length + state.customTasks.length,
+      currentStreak: state.streak,
+      customTasksAdded: state.customTasks.length,
+      totalActivities: activityLog.length
+    }
+  };
+  
+  const jsonStr = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `DayFlow_${state.userName}_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  showToast('📊 Data exported as JSON file!', 'success', '✅');
+  logActivity('full_data_exported', { fileName: a.download });
+}
+
+function viewActivityLog() {
+  if (activityLog.length === 0) {
+    showToast('No activities recorded yet', 'info', '📭');
+    return;
+  }
+  
+  const logText = activityLog.map(log => 
+    `[${log.time}] ${log.action} - ${log.user}\n${JSON.stringify({...log}, null, 2)}`
+  ).join('\n---\n');
+  
+  // Create a simple activity view
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  `;
+  
+  const box = document.createElement('div');
+  box.style.cssText = `
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: var(--text);
+    font-family: var(--font-body);
+  `;
+  
+  box.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 style="font-size: 18px; font-family: var(--font-head); font-weight: 700; margin: 0;">📜 Activity Log</h2>
+      <button onclick="this.closest('[style*=\"position: fixed\"]').remove()" style="background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer;">×</button>
+    </div>
+    <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
+      Total Activities: <strong>${activityLog.length}</strong>
+    </div>
+    <div style="max-height: 60vh; overflow-y: auto;">
+      ${activityLog.slice().reverse().map(log => `
+        <div style="padding: 12px; background: var(--surface2); border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--accent);">
+          <div style="font-weight: 600; color: var(--accent); font-size: 12px;">
+            ${log.action.toUpperCase().replace(/_/g, ' ')}
+          </div>
+          <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">
+            ${log.time} • ${log.date}
+          </div>
+          ${log.taskName ? `<div style="font-size: 12px; margin-top: 4px;">📝 ${log.taskName}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+  
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+// =========== TOAST ===========
+function showToast(msg, type='info', icon='') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `${icon ? `<span>${icon}</span>` : ''}<span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('out');
+    setTimeout(() => toast.remove(), 300);
+  }, 2200);
+}
+
+// =========== CONFETTI ===========
+function fireConfetti(mini=false) {
+  if (typeof confetti === 'undefined') return;
+  if (mini) {
+    confetti({ particleCount:40, spread:60, origin:{y:0.7}, colors:['#7c6ff7','#22d3ee','#4ade80'] });
+  } else {
+    confetti({ particleCount:120, spread:90, origin:{y:0.5}, colors:['#7c6ff7','#f97316','#22d3ee','#4ade80','#fbbf24'] });
+    setTimeout(() => confetti({ particleCount:80, spread:120, origin:{y:0.4} }), 300);
+  }
+}
+</script>
+</body>
+</html>
