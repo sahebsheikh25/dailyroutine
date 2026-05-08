@@ -3,21 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DayFlow — Daily Routine Tracker</title>
+<title>sntracker — Premium Routine Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a24;
-    --border: rgba(255,255,255,0.07);
+    --bg: #0a1428;
+    --surface: #0d1f3c;
+    --surface2: #152a52;
+    --border: rgba(255,255,255,0.08);
     --accent: #7c6ff7;
     --accent2: #f97316;
     --accent3: #22d3ee;
     --text: #f0f0fa;
-    --muted: #6b6b8a;
+    --muted: #7b8ba8;
     --success: #4ade80;
     --card-done: rgba(74,222,128,0.06);
     --card-done-border: rgba(74,222,128,0.2);
@@ -50,6 +52,18 @@
     min-height: 100vh;
     transition: background var(--transition), color var(--transition);
     overflow-x: hidden;
+  }
+  #particle-background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  #particle-background canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
   }
 
   /* Noise texture overlay */
@@ -362,59 +376,87 @@
 
   /* ===== PROGRESS BAR ===== */
   .progress-section {
-    background: linear-gradient(135deg, var(--surface) 0%, rgba(34,211,238,0.03) 100%);
-    border: 1.5px solid var(--border);
-    border-radius: 16px;
-    padding: 20px 24px;
-    margin-bottom: 24px;
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(34,211,238,0.04) 100%);
+    border: 1.5px solid rgba(34,211,238,0.2);
+    border-radius: 20px;
+    padding: 24px 28px;
+    margin-bottom: 28px;
     animation: slideUp 0.6s ease 0.3s both;
-    transition: all var(--transition);
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+  }
+  .progress-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at top right, rgba(34,211,238,0.12), transparent 60%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
   }
   .progress-section:hover {
-    border-color: rgba(34,211,238,0.3);
-    box-shadow: 0 8px 24px rgba(34,211,238,0.1);
+    border-color: rgba(34,211,238,0.4);
+    box-shadow: 0 16px 48px rgba(34,211,238,0.15), inset 0 1px 1px rgba(255,255,255,0.1);
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(34,211,238,0.08) 100%);
   }
-  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-  .progress-title { font-family: var(--font-head); font-weight: 600; font-size: 15px; }
-  .progress-pct { 
-    font-family: var(--font-head); 
-    font-weight: 700; 
-    font-size: 18px; 
+  .progress-section:hover::before {
+    opacity: 1;
+  }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .progress-title { font-family: var(--font-head); font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: rgba(255,255,255,0.9); }
+  .progress-pct {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 20px;
     color: var(--accent3);
     animation: slideUp 0.6s ease 0.4s both;
+    text-shadow: 0 0 20px rgba(34,211,238,0.4);
   }
   .progress-bar-bg {
-    height: 12px; 
-    background: var(--surface2); 
-    border-radius: 99px; 
+    height: 14px;
+    background: linear-gradient(180deg, rgba(13,31,60,0.8), rgba(21,42,82,0.6));
+    border-radius: 99px;
     overflow: hidden;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.1);
+    border: 1px solid rgba(34,211,238,0.15);
+    position: relative;
   }
   .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    background: linear-gradient(90deg, var(--accent), var(--accent3), rgba(34,211,238,0.7));
     border-radius: 99px;
-    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 0 20px rgba(34,211,238,0.5), inset 0 1px 4px rgba(255,255,255,0.2);
   }
   .progress-bar-fill::before {
     content: '';
     position: absolute;
     top: 0; left: -100%;
     width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2.2s infinite;
   }
   .progress-bar-fill::after {
     content: '';
     position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-    width: 20px; height: 20px;
-    background: var(--accent3);
+    width: 24px; height: 24px;
+    background: radial-gradient(circle, var(--accent3), rgba(34,211,238,0.4));
     border-radius: 50%;
-    box-shadow: 0 0 15px var(--accent3), 0 0 30px rgba(34,211,238,0.4);
-    animation: pulse 2s infinite;
+    box-shadow: 0 0 24px var(--accent3), 0 0 48px rgba(34,211,238,0.35), inset 0 0 8px rgba(255,255,255,0.3);
+    animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
+  .progress-bar-fill.pulse-glow {
+    animation: progressGlowPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes progressGlowPulse {
+    0% { box-shadow: 0 0 20px rgba(34,211,238,0.5); }
+    50% { box-shadow: 0 0 40px rgba(34,211,238,0.8); }
+    100% { box-shadow: 0 0 20px rgba(34,211,238,0.5); }
+  }
+
 
   /* ===== SECTION HEADERS ===== */
   .section-header {
@@ -881,7 +923,80 @@
     left: 100%;
   }
 
-  /* ===== ACTIVE INDICATOR ===== */
+  .top-sync-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    transform-origin: left;
+    transform: scaleX(0);
+    opacity: 0;
+    transition: transform 0.35s ease, opacity 0.35s ease;
+    z-index: 1100;
+  }
+  .top-sync-bar.active {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  .scroll-refresh-popup {
+    position: fixed; top: 82px; left: 50%; transform: translateX(-50%);
+    z-index: 1101; display: flex; align-items: center; gap: 14px;
+    width: min(480px, calc(100% - 36px));
+    padding: 16px 18px;
+    border-radius: 18px;
+    backdrop-filter: blur(20px);
+    background: rgba(17,17,24,0.88);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 28px 60px rgba(0,0,0,0.24);
+    color: #fff;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0; pointer-events: none;
+  }
+  .scroll-refresh-popup.hidden {
+    opacity: 0; transform: translateX(-50%) translateY(-10px);
+  }
+  .scroll-refresh-popup.visible {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+  .scroll-refresh-popup .refresh-icon {
+    width: 44px; height: 44px;
+    border-radius: 16px;
+    display: grid; place-items: center;
+    background: rgba(124,111,247,0.18);
+    border: 1px solid rgba(124,111,247,0.3);
+    font-size: 20px;
+    animation: float 2.4s ease-in-out infinite;
+    box-shadow: 0 14px 40px rgba(124,111,247,0.22);
+  }
+  .refresh-title { font-size: 15px; font-weight: 700; letter-spacing: 0.01em; }
+  .refresh-subtitle { font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+  .tasks-grid.refreshing .task-card {
+    filter: blur(0.5px) brightness(1.02);
+    transform: translateY(0px);
+    transition: filter 0.35s ease, transform 0.35s ease;
+    position: relative;
+  }
+  .tasks-grid.refreshing .task-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.08), transparent);
+    pointer-events: none;
+    animation: shimmer 1.6s infinite;
+    border-radius: inherit;
+  }
+  .task-card.update-glow {
+    animation: cardHighlight 1s ease both;
+  }
+  .task-card.fade-in {
+    animation: cardIn 0.5s ease both;
+  }
+
+  @keyframes cardHighlight {
+    0% { box-shadow: 0 0 0 rgba(124,111,247,0); transform: translateY(0); }
+    50% { box-shadow: 0 0 28px rgba(124,111,247,0.18); transform: translateY(-4px); }
+    100% { box-shadow: 0 0 0 rgba(124,111,247,0); transform: translateY(0); }
+  }
   .now-pill {
     display: inline-flex; align-items: center; gap: 4px;
     background: rgba(249,115,22,0.15);
@@ -969,59 +1084,142 @@
 
   /* ===== MOBILE ===== */
   @media (max-width: 768px) {
-    .app-wrapper { padding: 16px 12px 72px; }
-    .hero-section { flex-direction: column; align-items: flex-start; padding: 18px; }
-    .clock-display { font-size: clamp(24px, 4vw, 32px); text-align: left; }
-    .stats-row { gap: 10px; }
-    .stat-card { padding: 16px 12px; }
+    .app-wrapper { padding: 16px 12px 80px; }
+    .hero-section { flex-direction: column; align-items: stretch; padding: 18px; gap: 16px; }
+    .hero-section > div { width: 100%; }
+    .clock-display { font-size: clamp(22px, 6vw, 28px); text-align: left; }
+    .greeting { font-size: 18px; }
+    .stats-row { gap: 10px; grid-template-columns: repeat(2, 1fr); }
+    .stat-card { padding: 14px 12px; border-radius: 16px; }
+    .stat-value { font-size: 20px; }
+    .stat-label { font-size: 11px; }
+    .progress-section { padding: 18px 16px; margin-bottom: 20px; border-radius: 16px; }
+    .progress-header { margin-bottom: 12px; gap: 8px; }
+    .progress-title { font-size: 13px; }
+    .progress-pct { font-size: 18px; }
+    .progress-bar-bg { height: 11px; border-radius: 99px; }
+    .progress-bar-fill { height: 11px; }
+    .progress-bar-fill::after { width: 20px; height: 20px; }
     .task-card {
-      padding: 16px;
+      padding: 14px;
       gap: 12px;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      min-height: auto;
+      align-items: stretch;
+      border-radius: 16px;
     }
-    .task-card .task-check { align-self: flex-start; margin-bottom: 8px; }
+    .task-card .task-left { display: flex; gap: 10px; align-items: flex-start; width: 100%; }
+    .task-card .task-right { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .task-card .task-check { width: 26px; height: 26px; font-size: 13px; flex-shrink: 0; }
     .task-card .task-content { width: 100%; }
-    .task-card .task-tag { align-self: flex-end; margin-top: 8px; }
-    .task-card .task-delete { align-self: flex-end; }
-    .add-task-form { flex-direction: column; }
-    .add-input, .add-btn { width: 100%; }
-    .task-details { display: none; }
-    .logo { font-size: 18px; }
-    header { margin-bottom: 24px; gap: 8px; }
-    .section-header { margin-top: 20px; }
+    .task-card .task-tag { align-self: flex-end; margin-top: 8px; font-size: 11px; padding: 4px 8px; }
+    .task-card .task-delete { align-self: flex-end; font-size: 14px; }
+    .task-card .task-center { width: 100%; }
+    .task-card .task-time { font-size: 11px; }
+    .task-card .task-name { font-size: clamp(13px, 4vw, 15px); }
+    .task-card .task-details { width: 100%; font-size: 12px; color: var(--muted); }
+    .task-icon { width: 28px; height: 28px; font-size: 16px; flex-shrink: 0; }
+    .add-task-form { flex-direction: column; gap: 12px; }
+    .add-task-section { padding: 14px; }
+    .add-input { width: 100%; font-size: 13px; padding: 10px 12px; }
+    .add-btn { width: 100%; padding: 10px 12px; font-size: 13px; }
+    .task-details { display: block; }
+    .logo { font-size: 20px; }
+    header { margin-bottom: 20px; gap: 8px; }
+    .section-header { margin-top: 18px; }
+    .section-title { font-size: 16px; }
+    .section-badge { font-size: 12px; padding: 5px 10px; }
+    .sync-pill { padding: 0 8px; font-size: 11px; }
+    .onboard-box { padding: 28px 16px; width: 92%; }
+    .onboard-box h2 { font-size: 20px; }
+    .onboard-input { font-size: 13px; padding: 10px; }
+    .onboard-btn { padding: 10px; font-size: 13px; }
+    .bottom-actions { flex-direction: column; gap: 10px; }
+    .outline-btn { width: 100%; }
+    .scroll-refresh-popup { right: 12px; left: 12px; width: auto; }
+    .scroll-refresh-popup-content { font-size: 13px; }
   }
-
   @media (max-width: 480px) {
     .app-wrapper { padding: 12px 10px 72px; }
-    .hero-section { padding: 16px; }
-    .greeting { font-size: 18px; }
-    .clock-display { font-size: 24px; }
+    .hero-section { padding: 14px; gap: 12px; }
+    .greeting { font-size: 16px; }
+    .clock-display { font-size: 20px; }
     .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .stat-card { padding: 14px 10px; border-radius: 12px; }
-    .stat-value { font-size: 22px; }
+    .stat-card { padding: 12px 10px; border-radius: 14px; }
+    .stat-value { font-size: 18px; font-weight: 700; }
     .stat-label { font-size: 10px; }
-    .task-card { padding: 14px; gap: 10px; }
-    .task-check { width: 24px; height: 24px; font-size: 14px; }
-    .task-name { font-size: clamp(13px, 3vw, 15px); }
+    .progress-section { padding: 16px 14px; margin-bottom: 18px; border-radius: 14px; }
+    .progress-header { margin-bottom: 10px; }
+    .progress-title { font-size: 12px; }
+    .progress-pct { font-size: 16px; }
+    .progress-bar-bg { height: 10px; margin-top: 8px; }
+    .progress-bar-fill { height: 10px; }
+    .progress-bar-fill::after { width: 18px; height: 18px; }
+    .task-card { padding: 12px; gap: 10px; border-radius: 14px; }
+    .task-check { width: 24px; height: 24px; font-size: 12px; }
+    .task-icon { font-size: 16px; width: 24px; height: 24px; }
+    .task-name { font-size: clamp(12px, 3vw, 14px); }
     .task-time { font-size: 10px; }
-    .task-icon { font-size: 20px; width: 26px; height: 26px; }
-    .onboard-box { padding: 32px 20px; width: 90%; }
-    .onboard-box h2 { font-size: 22px; }
-    .onboard-input { font-size: 14px; padding: 12px; }
-    .onboard-btn { padding: 12px; font-size: 14px; }
-    .add-task-section { padding: 16px; }
-    .add-btn { padding: 12px 16px; }
-    .bottom-actions { flex-direction: column; }
-    .outline-btn { width: 100%; }
+    .task-details { font-size: 11px; }
+    .add-task-section { padding: 12px; }
+    .add-input { font-size: 12px; padding: 8px 10px; }
+    .add-btn { padding: 8px 12px; font-size: 12px; }
+    .onboard-box { padding: 24px 16px; width: 90%; }
+    .onboard-box h2 { font-size: 18px; }
+    .onboard-input { font-size: 13px; padding: 10px; }
+    .onboard-btn { padding: 10px; font-size: 13px; }
+    .logo { font-size: 18px; }
+    .section-title { font-size: 14px; }
+    .sync-pill { padding: 0 6px; font-size: 10px; }
+    .bottom-actions { flex-direction: column; gap: 8px; }
+    .outline-btn { width: 100%; padding: 10px 12px; font-size: 12px; }
+    .scroll-refresh-popup { right: 8px; left: 8px; width: auto; bottom: 100px; }
+    .scroll-refresh-popup-content { font-size: 12px; padding: 12px 14px; }
+  }
+
+  @media (max-width: 380px) {
+    .app-wrapper { padding: 10px 8px 68px; }
+    .hero-section { padding: 12px; gap: 10px; }
+    .greeting { font-size: 15px; }
+    .clock-display { font-size: 18px; }
+    .stats-row { grid-template-columns: 1fr; gap: 8px; }
+    .stat-card { padding: 10px 8px; border-radius: 12px; }
+    .stat-value { font-size: 16px; }
+    .stat-label { font-size: 9px; }
+    .progress-section { padding: 14px 12px; margin-bottom: 16px; }
+    .progress-title { font-size: 11px; }
+    .progress-pct { font-size: 14px; }
+    .progress-bar-bg { height: 8px; }
+    .progress-bar-fill { height: 8px; }
+    .task-card { padding: 10px; gap: 8px; }
+    .task-check { width: 22px; height: 22px; font-size: 11px; }
+    .task-icon { width: 22px; height: 22px; font-size: 14px; }
+    .task-name { font-size: 12px; }
+    .task-time { font-size: 9px; }
+    .section-title { font-size: 13px; }
+    .add-input { font-size: 12px; padding: 8px; }
+    .add-btn { font-size: 11px; padding: 8px 10px; }
+  }
+  }
+
+  /* DESKTOP OPTIMIZATIONS */
+  @media (min-width: 769px) {
+    .task-card { transition: all 0.2s ease; }
+    .task-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(34,211,238,0.12); }
+    .progress-section:hover { transform: translateY(-1px); }
   }
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+  /* Touch-friendly adjustments */
+  @media (hover: none) and (pointer: coarse) {
+    .task-card { min-height: 56px; }
+    .task-check, .task-delete, .add-btn { min-width: 44px; min-height: 44px; }
+    .progress-section { padding: 18px 16px; }
+  }
 
   /* Stagger cards */
   .task-card:nth-child(1) { animation-delay: 0.05s }
@@ -1042,13 +1240,14 @@
 </style>
 </head>
 <body>
+<div id="particle-background"></div>
 
 <!-- Onboarding -->
 <div id="onboarding">
   <div class="onboard-box">
     <span class="onboard-emoji">🚀</span>
-    <h2>Welcome to DayFlow</h2>
-    <p>Your personal daily routine tracker. Let's start by getting to know you!</p>
+    <h2>Welcome to sntracker</h2>
+    <p>Your personal routine dashboard. Let’s shape the most productive version of your day.</p>
     <input class="onboard-input" id="name-input" type="text" placeholder="Enter your name..." maxlength="30" autofocus>
     <div id="login-error" style="color: var(--accent2); font-size: 12px; margin-top: 8px; display: none;"></div>
     <button class="onboard-btn" onclick="startApp()" style="margin-top: 12px;">Let's Crush Today →</button>
@@ -1060,19 +1259,42 @@
 
 <!-- Toast Container -->
 <div id="toast-container"></div>
+<div id="top-sync-bar" class="top-sync-bar"></div>
+<div id="scroll-refresh-popup" class="scroll-refresh-popup hidden" aria-live="polite" role="status">
+  <div class="refresh-icon">🔄</div>
+  <div>
+    <div class="refresh-title">Fetching Latest Routine...</div>
+    <div class="refresh-subtitle">Silently refreshing routine data in the background.</div>
+  </div>
+</div>
+
+<div id="app-loader" class="app-loader active" aria-live="polite" role="status">
+  <div class="loader-ring"></div>
+  <div class="loader-copy">
+    <h2>Loading your routine</h2>
+    <p>Loading cached data — refreshed nightly at 12:00 AM.</p>
+  </div>
+  <div class="skeleton-grid">
+    <div class="skeleton-card"><span class="skeleton-avatar"></span><div class="skeleton-body"><span></span><span></span></div></div>
+    <div class="skeleton-card"><span class="skeleton-avatar"></span><div class="skeleton-body"><span></span><span></span></div></div>
+    <div class="skeleton-card"><span class="skeleton-avatar"></span><div class="skeleton-body"><span></span><span></span></div></div>
+    <div class="skeleton-card"><span class="skeleton-avatar"></span><div class="skeleton-body"><span></span><span></span></div></div>
+  </div>
+</div>
 
 <!-- App -->
 <div class="app-wrapper">
   <!-- Header -->
   <header>
     <div class="logo">
-      <span class="logo-dot"></span> DayFlow
+      <span class="logo-dot"></span> sntracker
     </div>
     <div class="header-actions">
       <div class="icon-btn" title="Toggle theme" onclick="toggleTheme()">☀️</div>
       <div class="icon-btn" title="Change name" onclick="changeUser()">👤</div>
       <div class="icon-btn" title="Reset today" onclick="confirmReset()">🔄</div>
       <div class="icon-btn" title="Logout" onclick="logout()" style="color: var(--accent2);">🚪</div>
+      <div class="sync-pill" id="sync-indicator" title="Nightly sync status">Next sync 12:00 AM</div>
     </div>
   </header>
 
@@ -1216,21 +1438,298 @@ function playClickSound() {
 }
 
 // =========== DATA ===========
-const PREDEFINED = [
-  { id:'p1', time:'7:00 AM – 7:30 AM',   name:'Morning Routine',          details:'Wake up, brush, freshen up, drink water',     start:[7,0],  end:[7,30],   icon:'🌅'},
-  { id:'p2', time:'7:30 AM – 9:00 AM',   name:'Research Methodology',     details:'Theory, definitions, PYQ, short notes',       start:[7,30], end:[9,0],    icon:'📚'},
-  { id:'p3', time:'9:00 AM – 10:00 AM',  name:'Bath + Puja',              details:'Bath, puja, refresh mind',                    start:[9,0],  end:[10,0],   icon:'🛁'},
-  { id:'p4', time:'10:00 AM – 10:30 AM', name:'Breakfast',                details:'Healthy breakfast',                           start:[10,0], end:[10,30],  icon:'🍽️'},
-  { id:'p5', time:'10:30 AM – 12:20 PM', name:'Database Management Systems', details:'Lecture, SQL, ER model, normalization',   start:[10,30],end:[12,20],  icon:'🗄️'},
-  { id:'p6', time:'12:20 PM – 1:00 PM',  name:'Lunch + Rest',             details:'Lunch and short rest',                        start:[12,20],end:[13,0],   icon:'🥘'},
-  { id:'p7', time:'1:00 PM – 2:30 PM',   name:'Networking Session',       details:'OSI, TCP/IP, routing, subnetting',            start:[13,0], end:[14,30],  icon:'🌐'},
-  { id:'p8', time:'2:30 PM – 3:30 PM',   name:'Rest / Refresh',           details:'Relax and refresh',                           start:[14,30],end:[15,30],  icon:'☕'},
-  { id:'p9', time:'3:30 PM – 4:30 PM',   name:'Kali Linux Practice',      details:'Nmap, Nikto, Burp Suite, Hydra',              start:[15,30],end:[16,30],  icon:'🖥️'},
-  { id:'p10',time:'5:00 PM – 6:00 PM',   name:'Workout',                  details:'Exercise and cardio',                         start:[17,0], end:[18,0],   icon:'💪'},
-  { id:'p11',time:'6:00 PM – 7:00 PM',   name:'Bath + Rest',              details:'Refresh after workout',                       start:[18,0], end:[19,0],   icon:'🚿'},
-  { id:'p12',time:'8:00 PM – 9:30 PM',   name:'Class / Study Session',    details:'Revision and cybersecurity learning',         start:[20,0], end:[21,30],  icon:'👨‍💻'},
-  { id:'p13',time:'After 9:30 PM',        name:'Sleep',                    details:'Avoid late-night scrolling 🌙',               start:[21,30],end:[24,0],   icon:'😴'},
-];
+let PREDEFINED = [];
+
+// API Configuration
+const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/d4me1o8fo2zkw';
+const API_CACHE_KEY = 'dayflow_api_cache';
+const API_CACHE_TTL = 3600000; // 1 hour
+
+let lastApiSnapshot = '';
+let apiRefreshTimer = null;
+let nightlyRefreshTimer = null;
+let isApiLoading = false;
+
+function scheduleNightlyUpdate(hour = 0, minute = 0) {
+  if (nightlyRefreshTimer) {
+    clearTimeout(nightlyRefreshTimer);
+  }
+
+  const now = new Date();
+  const nextUpdate = new Date(now);
+  nextUpdate.setHours(hour, minute, 0, 0);
+
+  if (nextUpdate <= now) {
+    nextUpdate.setDate(nextUpdate.getDate() + 1);
+  }
+
+  const delay = nextUpdate - now;
+  nightlyRefreshTimer = setTimeout(async () => {
+    try {
+      const changed = await fetchRoutineData(true);
+      if (changed) {
+        renderTasks();
+        showToast('🌙 Nightly database sync completed at 12:00 AM', 'success');
+      }
+    } catch (error) {
+      console.warn('Nightly refresh failed:', error);
+      setSyncIndicator('Error', 'Nightly sync failed');
+    } finally {
+      scheduleNightlyUpdate(hour, minute);
+    }
+  }, delay);
+}
+
+function loadCachedRoutineData() {
+  const cacheRaw = localStorage.getItem(API_CACHE_KEY);
+  if (!cacheRaw) return false;
+  try {
+    PREDEFINED = JSON.parse(cacheRaw);
+    lastApiSnapshot = cacheRaw;
+    return true;
+  } catch (error) {
+    console.warn('Cached routine parse failed:', error);
+    return false;
+  }
+}
+
+// Fetch tasks from SheetDB API
+async function fetchRoutineData(forceRefresh = false, showSkeleton = true) {
+  let cacheRaw = null;
+  let cachedData = null;
+  let cacheTime = 0;
+
+  try {
+    if (showSkeleton && (forceRefresh || PREDEFINED.length === 0)) {
+      showLoadingSkeletons();
+    }
+
+    setSyncIndicator('Syncing…', 'Fetching latest routines');
+    isApiLoading = true;
+
+    cacheRaw = localStorage.getItem(API_CACHE_KEY);
+    cacheTime = parseInt(localStorage.getItem(API_CACHE_KEY + '_time'), 10);
+    cachedData = cacheRaw ? JSON.parse(cacheRaw) : null;
+    const cacheValid = cacheRaw && cacheTime && (Date.now() - cacheTime < API_CACHE_TTL);
+
+    const response = await fetch(`${SHEETDB_API_URL}?_=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const transformed = data.map((row, index) => {
+      const startHour = parseInt(row.StartHour, 10) || 0;
+      const startMinute = parseInt(row.StartMinute, 10) || 0;
+      const endHour = parseInt(row.EndHour, 10) || 0;
+      const endMinute = parseInt(row.EndMinute, 10) || 0;
+      const startTime = formatTime(startHour, startMinute);
+      const endTime = formatTime(endHour, endMinute);
+      const timeRange = `${startTime} – ${endTime}`;
+
+      return {
+        id: `p${row.id || index + 1}`,
+        time: row.Time || timeRange,
+        name: row.Task || 'Task',
+        details: row.Details || '',
+        start: [startHour, startMinute],
+        end: [endHour, endMinute],
+        icon: row.Icon || '📋'
+      };
+    });
+
+    const payload = JSON.stringify(transformed);
+    const changed = payload !== lastApiSnapshot;
+
+    if (changed || !PREDEFINED.length) {
+      PREDEFINED = transformed;
+      lastApiSnapshot = payload;
+      localStorage.setItem(API_CACHE_KEY, payload);
+      localStorage.setItem(API_CACHE_KEY + '_time', Date.now().toString());
+    }
+
+    setSyncIndicator(changed ? 'Updated' : 'Up to date', changed ? 'Latest sheet changes applied' : 'No new changes');
+    return changed;
+  } catch (error) {
+    console.warn('API fetch failed:', error);
+    logActivity('api_error', { error: error.message });
+    const fallbackAvailable = cacheRaw && cachedData;
+    if (fallbackAvailable) {
+      PREDEFINED = cachedData;
+      lastApiSnapshot = JSON.stringify(PREDEFINED);
+      setSyncIndicator('Offline', 'Using cached routines');
+      return false;
+    }
+    setSyncIndicator('Error', 'Unable to sync routines');
+    return false;
+  } finally {
+    isApiLoading = false;
+  }
+}
+
+function showLoadingSkeletons(count = 4) {
+  const container = document.getElementById('predefined-tasks');
+  if (!container) return;
+  const skeletons = Array.from({ length: count }, () => `
+      <div class="skeleton-card">
+        <span class="skeleton-avatar"></span>
+        <div class="skeleton-body">
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    `).join('');
+  container.innerHTML = `<div class="skeleton-grid">${skeletons}</div>`;
+}
+
+function showLoadingOverlay(show) {
+  const loader = document.getElementById('app-loader');
+  if (!loader) return;
+  loader.classList.toggle('hidden', !show);
+}
+
+function setSyncIndicator(text, title = '') {
+  const el = document.getElementById('sync-indicator');
+  if (!el) return;
+  el.textContent = text;
+  el.title = title || 'Live sync status';
+  el.className = 'sync-pill';
+  const lower = text.toLowerCase();
+  if (lower.includes('sync') || lower.includes('loading') || lower.includes('updating') || lower.includes('fetching')) {
+    el.classList.add('syncing');
+  } else if (lower.includes('updated') || lower.includes('up to date')) {
+    el.classList.add('updated');
+  } else if (lower.includes('offline') || lower.includes('error')) {
+    el.classList.add('error');
+  }
+}
+
+const SCROLL_REFETCH_THRESHOLD = 320;
+const SCROLL_REFETCH_MIN_INTERVAL = 30000;
+const SCROLL_TOP_REFRESH_TRIGGER = 120;
+let lastScrollFetchY = 0;
+let lastScrollFetchAt = 0;
+let isScrollRefreshActive = false;
+
+function throttle(fn, delay) {
+  let lastCall = 0;
+  let timeout = null;
+  return (...args) => {
+    const now = Date.now();
+    const remaining = delay - (now - lastCall);
+    if (remaining <= 0) {
+      clearTimeout(timeout);
+      timeout = null;
+      lastCall = now;
+      fn(...args);
+    } else if (!timeout) {
+      timeout = setTimeout(() => {
+        lastCall = Date.now();
+        timeout = null;
+        fn(...args);
+      }, remaining);
+    }
+  };
+}
+
+function bindScrollRefetch() {
+  const scrollHandler = throttle(() => {
+    const scrollY = window.scrollY || window.pageYOffset;
+    const distance = Math.abs(scrollY - lastScrollFetchY);
+    const now = Date.now();
+    const reachedTop = scrollY < SCROLL_TOP_REFRESH_TRIGGER;
+    const enoughTime = now - lastScrollFetchAt > SCROLL_REFETCH_MIN_INTERVAL;
+
+    if (!enoughTime) return;
+    if (reachedTop || distance >= SCROLL_REFETCH_THRESHOLD) {
+      lastScrollFetchY = scrollY;
+      lastScrollFetchAt = now;
+      triggerScrollRefresh();
+    }
+  }, 250);
+
+  window.addEventListener('scroll', scrollHandler, { passive: true });
+}
+
+function showTopProgress(active) {
+  const bar = document.getElementById('top-sync-bar');
+  if (!bar) return;
+  if (active) {
+    bar.classList.add('active');
+    bar.style.transform = 'scaleX(0.02)';
+    requestAnimationFrame(() => {
+      bar.style.transform = 'scaleX(1)';
+    });
+  } else {
+    bar.style.transform = 'scaleX(1)';
+    setTimeout(() => bar.classList.remove('active'), 360);
+  }
+}
+
+function showScrollRefreshPopup(show) {
+  const popup = document.getElementById('scroll-refresh-popup');
+  if (!popup) return;
+  popup.classList.toggle('hidden', !show);
+  popup.classList.toggle('visible', show);
+}
+
+function triggerScrollRefresh() {
+  if (isScrollRefreshActive || isApiLoading) return;
+  isScrollRefreshActive = true;
+  showTopProgress(true);
+  showScrollRefreshPopup(true);
+  setSyncIndicator('🔄 Fetching Latest Routine...', 'Background refresh started');
+  document.getElementById('predefined-tasks')?.classList.add('refreshing');
+
+  fetchRoutineData(true, false).then((changed) => {
+    document.getElementById('predefined-tasks')?.classList.remove('refreshing');
+    showScrollRefreshPopup(false);
+    showTopProgress(false);
+
+    if (changed) {
+      renderTasks();
+      animateUpdatedCards();
+      showToast('✅ Routine Updated Successfully', 'success');
+    } else {
+      updateStats();
+      setSyncIndicator('Up to date', 'Routine data is current');
+    }
+  }).catch((error) => {
+    console.warn('Scroll refresh failed:', error);
+    showScrollRefreshPopup(false);
+    showTopProgress(false);
+    setSyncIndicator('Error', 'Background refresh failed');
+  }).finally(() => {
+    isScrollRefreshActive = false;
+  });
+}
+
+function animateUpdatedCards() {
+  document.querySelectorAll('#predefined-tasks .task-card').forEach(card => {
+    card.classList.add('update-glow');
+    card.classList.add('fade-in');
+    setTimeout(() => {
+      card.classList.remove('update-glow');
+      card.classList.remove('fade-in');
+    }, 900);
+  });
+}
+
+// Format time helper
+function formatTime(hours, minutes) {
+  const h = hours % 12 || 12;
+  const m = String(minutes).padStart(2, '0');
+  const period = hours >= 12 ? 'PM' : 'AM';
+  return `${h}:${m} ${period}`;
+}
 
 // =========== STATE ===========
 let state = {
@@ -1254,6 +1753,38 @@ function loadActivityLog() {
 
 function saveActivityLog() {
   localStorage.setItem(ACTIVITY_LOG_KEY, JSON.stringify(activityLog));
+}
+
+function initParticles() {
+  if (typeof particlesJS !== 'undefined') {
+    particlesJS('particle-background', {
+      particles: {
+        number: { value: 35, density: { enable: true, value_area: 800 } },
+        color: { value: ['#7c6ff7', '#22d3ee', '#f97316', '#ffffff'] },
+        shape: { type: 'circle' },
+        opacity: { value: 0.22, anim: { enable: true, speed: 1.2, opacity_min: 0.08, sync: false } },
+        size: { value: 12, random: true, anim: { enable: true, speed: 2.5, size_min: 6, sync: false } },
+        line_linked: { enable: true, distance: 180, color: '#7c6ff7', opacity: 0.12, width: 1.5 },
+        move: { enable: true, speed: 1.4, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
+      },
+      interactivity: {
+        detect_on: 'canvas',
+        events: {
+          onhover: { enable: true, mode: 'repulse' },
+          onclick: { enable: true, mode: 'bubble' },
+          resize: true
+        },
+        modes: {
+          grab: { distance: 220, line_linked: { opacity: 0.3 } },
+          bubble: { distance: 280, size: 18, duration: 1.8, opacity: 0.4, speed: 3 },
+          repulse: { distance: 200, duration: 0.6 },
+          push: { particles_nb: 6 },
+          remove: { particles_nb: 3 }
+        }
+      },
+      retina_detect: true
+    });
+  }
 }
 
 function logActivity(action, details = {}) {
@@ -1313,6 +1844,7 @@ window.addEventListener('DOMContentLoaded', () => {
     return;
   }
   
+  initParticles();
   if (state.userName) {
     document.getElementById('onboarding').classList.add('hidden');
     initApp();
@@ -1354,10 +1886,68 @@ function startApp() {
 function initApp() {
   document.getElementById('user-name').textContent = state.userName;
   updateGreeting();
+  showLoadingOverlay(true);
+  setSyncIndicator('Next sync 12:00 AM', 'Routine data updates nightly at midnight');
+
+  const loadedCache = loadCachedRoutineData();
   renderTasks();
-  updateStats();
-  applyTheme();
-  logActivity('user_login', { loginTime: new Date().toLocaleTimeString() });
+  bindScrollRefetch();
+  animateProgressOnLoad();
+
+  if (loadedCache) {
+    showToast('📦 Routine loaded from cache', 'info');
+    showLoadingOverlay(false);
+    scheduleNightlyUpdate(0, 0);
+  } else {
+    showToast('📡 Fetching initial routine list...', 'info');
+    fetchRoutineData(true).then((changed) => {
+      renderTasks();
+      if (changed) {
+        showToast('☁️ Initial routine list loaded from Sheets', 'success');
+      }
+    }).catch(error => {
+      console.error('Failed to load routine data:', error);
+      if (!PREDEFINED.length) {
+        showToast('⚠️ No routine data available yet', 'error');
+      }
+    }).finally(() => {
+      showLoadingOverlay(false);
+      scheduleNightlyUpdate(0, 0);
+    });
+  }
+}
+
+function animateProgressOnLoad() {
+  const allIds = [...PREDEFINED.map(t=>t.id), ...state.customTasks.map(t=>t.id)];
+  const total = allIds.length;
+  const done = state.completedIds.filter(id => allIds.includes(id)).length;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+
+  const progressFill = document.getElementById('progress-fill');
+  const progressPct = document.getElementById('progress-pct');
+
+  if (typeof gsap !== 'undefined') {
+    gsap.fromTo({ value: 0 }, { value: pct }, {
+      duration: 1.2,
+      ease: 'power3.out',
+      onUpdate: function() {
+        const displayVal = Math.round(this.targets()[0].value);
+        progressPct.textContent = displayVal + '%';
+      }
+    });
+
+    gsap.fromTo(progressFill, { width: '0%' }, {
+      width: pct + '%',
+      duration: 1.2,
+      ease: 'power3.out',
+      delay: 0.2
+    });
+  } else {
+    progressPct.textContent = pct + '%';
+    progressFill.style.width = pct + '%';
+  }
+
+  currentProgress = pct;
 }
 
 // =========== CLOCK ===========
@@ -1407,10 +1997,39 @@ function checkDayReset() {
   }
 }
 
-// =========== RENDER ===========
+// Periodic API refresh - every 8 seconds
+function setupPeriodicRefresh() {
+  if (apiRefreshTimer) {
+    clearInterval(apiRefreshTimer);
+  }
+  apiRefreshTimer = setInterval(async () => {
+    try {
+      const changed = await fetchRoutineData(true);
+      if (changed) {
+        renderTasks();
+        showToast('🔄 Routine list updated from Sheets', 'info');
+      } else {
+        updateStats();
+      }
+    } catch (error) {
+      console.warn('Periodic refresh failed:', error);
+    }
+  }, 8000);
+}
+
+// Manual refresh function (can be called from console or button)
+async function manualRefreshRoutines() {
+  console.log('🔄 Refreshing routine data...');
+  localStorage.removeItem(API_CACHE_KEY);
+  localStorage.removeItem(API_CACHE_KEY + '_time');
+  const changed = await fetchRoutineData(true);
+  renderTasks();
+  showToast(changed ? '✓ Routines refreshed from Sheets!' : '✓ No updates found', 'info');
+}
 function renderTasks() {
   renderPredefined();
   renderCustom();
+  updateStats();
 }
 
 function renderPredefined() {
@@ -1522,6 +2141,8 @@ function toggleTask(id, cardEl) {
 }
 
 // =========== STATS ===========
+let currentProgress = 0;
+
 function updateStats() {
   const allIds = [...PREDEFINED.map(t=>t.id), ...state.customTasks.map(t=>t.id)];
   const total = allIds.length;
@@ -1533,8 +2154,42 @@ function updateStats() {
   document.getElementById('stat-remaining').textContent = total - done;
   document.getElementById('stat-score').textContent = score;
   document.getElementById('stat-streak').innerHTML = `${state.streak} <span class="streak-fire">🔥</span>`;
-  document.getElementById('progress-pct').textContent = pct + '%';
-  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Animate progress bar and counter
+  const progressFill = document.getElementById('progress-fill');
+  const progressPct = document.getElementById('progress-pct');
+
+  if (pct !== currentProgress) {
+    const diff = pct - currentProgress;
+    if (diff > 0) {
+      progressFill.classList.add('pulse-glow');
+      setTimeout(() => progressFill.classList.remove('pulse-glow'), 600);
+    }
+
+    // Animate counter with GSAP if available
+    if (typeof gsap !== 'undefined') {
+      gsap.to({ value: currentProgress }, {
+        value: pct,
+        duration: 0.8,
+        ease: 'power2.out',
+        onUpdate: function() {
+          const displayVal = Math.round(this.targets()[0].value);
+          progressPct.textContent = displayVal + '%';
+        }
+      });
+
+      gsap.to(progressFill, {
+        width: pct + '%',
+        duration: 0.8,
+        ease: 'power2.out'
+      });
+    } else {
+      progressPct.textContent = pct + '%';
+      progressFill.style.width = pct + '%';
+    }
+
+    currentProgress = pct;
+  }
 }
 
 // =========== ACTIVE TASK ===========
@@ -1549,10 +2204,12 @@ function isActiveNow(task) {
 
 function highlightActiveTask() {
   document.querySelectorAll('#predefined-tasks .task-card').forEach((card, i) => {
-    const t = PREDEFINED[i];
-    const done = state.completedIds.includes(t.id);
-    if (!done && isActiveNow(t)) card.classList.add('active-now');
-    else card.classList.remove('active-now');
+    if (i < PREDEFINED.length) {
+      const t = PREDEFINED[i];
+      const done = state.completedIds.includes(t.id);
+      if (!done && isActiveNow(t)) card.classList.add('active-now');
+      else card.classList.remove('active-now');
+    }
   });
 }
 
@@ -1650,7 +2307,7 @@ function exportSummary() {
   const total = PREDEFINED.length + state.customTasks.length;
   const allTasks = [...PREDEFINED, ...state.customTasks];
   const completedNames = state.completedIds.map(id => allTasks.find(t=>t.id===id)?.name).filter(Boolean);
-  const text = `📋 DayFlow Summary — ${new Date().toLocaleDateString()}\n👤 ${state.userName}\n✅ ${done}/${total} tasks done (${Math.round(done/total*100)}%)\n🔥 Streak: ${state.streak}\n\n✅ Completed:\n${completedNames.map(n=>`• ${n}`).join('\n')}`;
+  const text = `📋 sntracker Summary — ${new Date().toLocaleDateString()}\n👤 ${state.userName}\n✅ ${done}/${total} tasks done (${Math.round(done/total*100)}%)\n🔥 Streak: ${state.streak}\n\n✅ Completed:\n${completedNames.map(n=>`• ${n}`).join('\n')}`;
   navigator.clipboard.writeText(text).then(() => showToast('Summary copied!', 'success', '📋')).catch(() => showToast('Copy failed', 'info', '⚠️'));
   logActivity('summary_exported', { completedCount: done, totalTasks: total });
 }
@@ -1676,7 +2333,7 @@ function exportAllData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `DayFlow_${state.userName}_${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `sntracker_${state.userName}_${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
