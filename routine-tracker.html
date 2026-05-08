@@ -223,6 +223,82 @@
     box-shadow: 0 0 10px var(--accent);
   }
   .header-actions { display: flex; align-items: center; gap: 12px; animation: slideIn 0.6s ease both; }
+  /* ===== MOBILE HEADER FIX ===== */
+
+@media (max-width:768px){
+
+  header{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:16px;
+  }
+  /* ===== MOBILE LOGO CENTER FIX ===== */
+
+.logo{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  text-align:center;
+
+  font-size:28px;
+  font-weight:800;
+
+  margin-bottom:4px;
+}
+
+.logo-dot{
+  flex-shrink:0;
+}
+
+header{
+  width:100%;
+  align-items:center !important;
+}
+
+  .header-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+  }
+
+  .icon-btn{
+    width:100%;
+    height:48px;
+    border-radius:14px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:18px;
+
+    background:rgba(255,255,255,0.04);
+    backdrop-filter:blur(12px);
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    transition:0.3s ease;
+  }
+
+  .sync-pill{
+    grid-column:span 4;
+
+    width:100%;
+    text-align:center;
+
+    padding:10px;
+    border-radius:14px;
+
+    background:rgba(255,255,255,0.04);
+
+    font-size:12px;
+  }
+
+}
   .icon-btn {
     width: 40px; height: 40px;
     background: var(--surface);
@@ -940,6 +1016,9 @@
 
   .scroll-refresh-popup {
     position: fixed; top: 82px; left: 50%; transform: translateX(-50%);
+    max-width: calc(100vw - 24px);
+    box-sizing: border-box;
+    overflow: hidden;
     z-index: 1101; display: flex; align-items: center; gap: 14px;
     width: min(480px, calc(100% - 36px));
     padding: 16px 18px;
@@ -1237,7 +1316,129 @@
   .task-card:nth-child(13) { animation-delay: 0.65s }
 
   .streak-fire { animation: float 2s ease-in-out infinite; display:inline-block; }
+  /* ===== MOBILE OVERFLOW FIX ===== */
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+* {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.app-wrapper {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+header,
+.hero-section,
+.stats-row,
+.progress-section,
+.task-card,
+.tasks-grid,
+.section-header,
+.add-task-section,
+.bottom-actions {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .app-wrapper {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .icon-btn {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+
+  .hero-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .clock-display {
+    width: 100%;
+    text-align: left;
+    word-break: break-word;
+  }
+
+  .task-card {
+    overflow: hidden;
+  }
+
+  .task-name,
+  .task-details {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .scroll-refresh-popup {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    transform: none;
+  }
+
+  footer {
+    width: 100%;
+    padding: 0 12px;
+    text-align: center;
+  }
+}
+
+/* ===== POPUP MOBILE FIX ===== */
+
+@media (max-width:768px){
+
+  .scroll-refresh-popup{
+    left:12px !important;
+    right:12px !important;
+
+    width:auto !important;
+    max-width:calc(100vw - 24px);
+
+    transform:none !important;
+
+    padding:12px 14px;
+
+    border-radius:16px;
+
+    overflow:hidden;
+    box-sizing:border-box;
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    z-index:99999;
+  }
+
+  .scroll-refresh-popup.visible{
+    transform:none !important;
+  }
+
+}
 </style>
+
 </head>
 <body>
 <div id="particle-background"></div>
@@ -1270,10 +1471,7 @@
 
 <div id="app-loader" class="app-loader active" aria-live="polite" role="status">
   <div class="loader-ring"></div>
-  <div class="loader-copy">
-    <h2>Loading your routine</h2>
-    <p>Loading cached data — refreshed nightly at 12:00 AM.</p>
-  </div>
+  
   <div class="skeleton-grid">
     <div class="skeleton-card"><span class="skeleton-avatar"></span><div class="skeleton-body"><span></span><span></span></div></div>
     <div class="skeleton-card"><span class="skeleton-avatar"></span><div class="skeleton-body"><span></span><span></span></div></div>
@@ -2434,5 +2632,6 @@ function fireConfetti(mini=false) {
   }
 }
 </script>
+
 </body>
 </html>
