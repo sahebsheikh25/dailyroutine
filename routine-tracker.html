@@ -781,6 +781,535 @@ header{
     box-shadow: 0 0 10px rgba(249,115,22,0.2);
   }
 
+  /* ===== ROADMAP ===== */
+  .roadmap-wrapper {
+    background: linear-gradient(180deg, rgba(2,16,36,0.95), rgba(8,20,48,0.92));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 28px;
+    padding: 26px 26px 26px 32px;
+    backdrop-filter: blur(28px);
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
+  }
+  .roadmap-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 10% 15%, rgba(34,211,238,0.14), transparent 20%), radial-gradient(circle at 85% 20%, rgba(124,111,247,0.12), transparent 18%), radial-gradient(circle at 70% 80%, rgba(59,130,246,0.08), transparent 22%);
+    pointer-events: none;
+  }
+  .roadmap-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(34,211,238,0.03), transparent 30%, rgba(124,111,247,0.02));
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  .roadmap-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+  .roadmap-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .roadmap-title {
+    font-family: var(--font-head);
+    font-size: clamp(22px, 4vw, 26px);
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .roadmap-badge {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.82);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .roadmap-progress {
+    position: relative;
+    margin-bottom: 18px;
+  }
+  .roadmap-progress-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 14px;
+  }
+  .roadmap-progress-track {
+    min-width: 0;
+  }
+  .roadmap-progress-chip {
+    font-family: var(--font-head);
+    font-size: clamp(20px, 4vw, 26px);
+    font-weight: 800;
+    color: #7dd3fc;
+    text-shadow: 0 0 18px rgba(34,211,238,0.35);
+    white-space: nowrap;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(34,211,238,0.22);
+    padding: 10px 14px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .roadmap-progress-chip.hidden {
+    display: none;
+  }
+  .roadmap-progress-row .roadmap-progress-chip {
+    margin-left: 0;
+  }
+  .roadmap-progress-glow {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(34,211,238,0.08), transparent 40%), radial-gradient(circle, rgba(124,111,247,0.06), transparent 35%);
+    pointer-events: none;
+    animation: glowMove 6s ease-in-out infinite;
+  }
+  .roadmap-progress-track {
+    height: 14px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .roadmap-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(34,211,238,0.95), rgba(124,111,247,0.95));
+    border-radius: 999px;
+    box-shadow: 0 0 26px rgba(34,211,238,0.4), 0 0 40px rgba(124,111,247,0.24);
+    animation: fillGlow 0.8s ease forwards;
+    position: relative;
+  }
+  .roadmap-progress-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0.2), transparent 50%, rgba(255,255,255,0.12));
+    mix-blend-mode: screen;
+  }
+  .roadmap-progress-glow {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(34,211,238,0.08), transparent 40%), radial-gradient(circle, rgba(124,111,247,0.06), transparent 35%);
+    pointer-events: none;
+    animation: glowMove 6s ease-in-out infinite;
+  }
+  .roadmap-item.completed {
+    border-color: rgba(34,211,238,0.35);
+    box-shadow: 0 24px 60px rgba(34,211,238,0.16), 0 0 0 1px rgba(74,222,128,0.14);
+    background: rgba(6,30,48,0.92);
+  }
+  .roadmap-item.completed .roadmap-index {
+    background: linear-gradient(135deg, rgba(74,222,128,0.95), rgba(16,185,129,0.9));
+    border-color: rgba(74,222,128,0.35);
+    color: #0f172a;
+    box-shadow: 0 0 20px rgba(74,222,128,0.38);
+  }
+  .roadmap-item.completed .roadmap-action {
+    background: rgba(16,185,129,0.15);
+    border-color: rgba(34,211,238,0.22);
+    color: #c7f4ff;
+  }
+  .roadmap-index {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #7dd3fc;
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 800;
+    text-shadow: 0 0 8px rgba(34,211,238,0.3);
+    cursor: pointer;
+    transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+  }
+  .roadmap-index:hover {
+    transform: translateY(-2px);
+  }
+  .roadmap-index::after {
+    content: '';
+    display: none;
+  }
+  .roadmap-item.completed .roadmap-index::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #0f172a;
+    font-size: 12px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 999px;
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+  }
+  .analytics-section {
+    margin-top: 24px;
+    padding: 22px 0 0;
+  }
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .analytics-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .analytics-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(74,222,128,0.24);
+    box-shadow: 0 22px 50px rgba(0,0,0,0.2);
+  }
+  .analytics-card.analytics-glow {
+    border-color: rgba(74,222,128,0.5);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.15), 0 0 30px rgba(74,222,128,0.3);
+  }
+  .analytics-card-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+  }
+  .analytics-card-value {
+    font-family: var(--font-head);
+    font-size: 28px;
+    font-weight: 800;
+    color: #ffffff;
+  }
+  .analytics-card-value.green {
+    color: #4ade80;
+    text-shadow: 0 0 18px rgba(74,222,128,0.35);
+  }
+  .analytics-card-value.green::after {
+    content: '';
+  }
+  .roadmap-item:hover {
+    transform: translateY(-6px);
+    border-color: rgba(34,211,238,0.38);
+  }
+  @media (max-width: 840px) {
+    position: relative;
+    display: grid;
+    gap: 18px;
+    padding-left: 34px;
+    z-index: 1;
+  }
+  .roadmap-timeline::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 26px;
+    bottom: 26px;
+    width: 3px;
+    background: linear-gradient(180deg, rgba(34,211,238,0.34), rgba(124,111,247,0.18));
+    border-radius: 999px;
+    filter: blur(0.4px);
+  }
+  .roadmap-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 18px;
+    align-items: center;
+    background: rgba(4,14,33,0.82);
+    border: 1px solid rgba(144,205,255,0.08);
+    border-radius: 22px;
+    padding: 22px 22px 22px 28px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 16px 45px rgba(0,0,0,0.18);
+    transform: translateY(24px);
+    opacity: 0;
+    transition: transform 0.45s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+  }
+  .roadmap-item.visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .roadmap-item::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -4px;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(34,211,238,0.9);
+    background: radial-gradient(circle, rgba(34,211,238,0.95), rgba(34,211,238,0.15));
+    box-shadow: 0 0 28px rgba(34,211,238,0.32), 0 0 0 4px rgba(34,211,238,0.06);
+    z-index: 2;
+  }
+  .roadmap-item.active-now::before {
+    background: radial-gradient(circle, rgba(124,111,247,0.95), rgba(124,111,247,0.18));
+    border-color: rgba(124,111,247,0.95);
+  }
+  .roadmap-item.active-now {
+    box-shadow: 0 24px 60px rgba(34,211,238,0.16), 0 0 0 1px rgba(34,211,238,0.1);
+    border-color: rgba(34,211,238,0.45);
+  }
+  .roadmap-index {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #7dd3fc;
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 800;
+    text-shadow: 0 0 8px rgba(34,211,238,0.3);
+  }
+  .roadmap-content {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+  }
+  .roadmap-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .roadmap-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    color: #7dd3fc;
+    font-size: 18px;
+    box-shadow: inset 0 0 6px rgba(255,255,255,0.08);
+  }
+  .roadmap-title-small {
+    font-family: var(--font-head);
+    font-size: 16px;
+    color: #e5f7ff;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  .roadmap-description {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 520px;
+  }
+  .roadmap-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #c7f4ff;
+    text-decoration: none;
+    background: rgba(25, 142, 255, 0.16);
+    border: 1px solid rgba(34,211,238,0.2);
+    box-shadow: 0 0 24px rgba(34,211,238,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  }
+  .roadmap-action:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, rgba(34,211,238,0.3), rgba(124,111,247,0.25));
+    box-shadow: 0 18px 38px rgba(34,211,238,0.25);
+  }
+  .roadmap-action:active {
+    transform: translateY(0);
+  }
+  .roadmap-checkbox {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  }
+  .roadmap-checkbox:hover {
+    transform: translateY(-1px);
+    border-color: rgba(34,211,238,0.4);
+    box-shadow: 0 0 22px rgba(34,211,238,0.14);
+  }
+  .roadmap-checkbox-inner {
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.04);
+    display: grid;
+    place-items: center;
+    transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    position: relative;
+  }
+  .roadmap-checkbox-checkmark {
+    width: 10px;
+    height: 18px;
+    border-right: 2px solid transparent;
+    border-bottom: 2px solid transparent;
+    transform: rotate(45deg) scale(0);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+  }
+  .roadmap-item.completed {
+    border-color: rgba(74,222,128,0.45);
+    box-shadow: 0 28px 75px rgba(74,222,128,0.22), 0 0 0 1px rgba(74,222,128,0.14);
+    background: rgba(6,30,48,0.95);
+    opacity: 0.98;
+  }
+  .roadmap-item.completed .roadmap-checkbox {
+    border-color: rgba(74,222,128,0.45);
+    background: rgba(20,80,45,0.18);
+    box-shadow: 0 0 28px rgba(74,222,128,0.22);
+  }
+  .roadmap-item.completed .roadmap-checkbox-inner {
+    background: rgba(52,211,153,0.14);
+    border-color: rgba(74,222,128,0.45);
+    box-shadow: inset 0 0 18px rgba(74,222,128,0.22);
+  }
+  .roadmap-item.completed .roadmap-checkbox-checkmark {
+    border-color: #a7f3d0;
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+  }
+  .roadmap-item.completed .roadmap-action {
+    background: rgba(16,185,129,0.15);
+    border-color: rgba(34,211,238,0.22);
+    color: #c7f4ff;
+  }
+  .roadmap-item:hover {
+    transform: translateY(-6px);
+    border-color: rgba(34,211,238,0.38);
+  }
+  @media (max-width: 840px) {
+    .roadmap-header {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+    .roadmap-stat {
+      width: 100%;
+    }
+  }
+  @media (max-width: 720px) {
+    .roadmap-wrapper {
+      padding: 16px 14px 16px 18px;
+    }
+    .roadmap-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+    }
+    .roadmap-title {
+      font-size: 22px;
+    }
+    .roadmap-progress-row {
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+    .roadmap-progress-track {
+      min-width: 0;
+    }
+    .roadmap-progress-chip {
+      font-size: 18px;
+      padding: 8px 12px;
+    }
+    .roadmap-timeline {
+      padding-left: 18px;
+      gap: 12px;
+    }
+    .roadmap-timeline::before {
+      left: 8px;
+      width: 2px;
+    }
+    .roadmap-item {
+      grid-template-columns: 1fr;
+      padding: 14px 14px 14px 22px;
+      gap: 12px;
+    }
+    .roadmap-item::before {
+      left: 5px;
+      width: 18px;
+      height: 18px;
+    }
+    .roadmap-index {
+      width: 44px;
+      height: 44px;
+      font-size: 15px;
+    }
+    .roadmap-icon {
+      width: 34px;
+      height: 34px;
+      font-size: 16px;
+    }
+    .roadmap-title-small {
+      font-size: 15px;
+    }
+    .roadmap-description {
+      font-size: 12.6px;
+      line-height: 1.5;
+    }
+    .roadmap-action {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+  }
+  @keyframes fillGlow {
+    0% { box-shadow: 0 0 20px rgba(34,211,238,0.4), 0 0 0 0 rgba(124,111,247,0); }
+    50% { box-shadow: 0 0 30px rgba(34,211,238,0.45), 0 0 0 6px rgba(124,111,247,0.08); }
+    100% { box-shadow: 0 0 26px rgba(34,211,238,0.4), 0 0 0 0 rgba(124,111,247,0); }
+  }
+  @keyframes glowMove {
+    0%, 100% { transform: translateY(-50%) translateX(0); }
+    50% { transform: translateY(-50%) translateX(12px); }
+  }
+  @keyframes progressPulse {
+    0%, 100% { opacity: 0.55; transform: scaleX(1); }
+    50% { opacity: 0.95; transform: scaleX(1.05); }
+  }
+
   .task-delete {
     grid-area: delete;
     width: 32px; height: 32px; flex-shrink: 0;
@@ -1539,6 +2068,148 @@ header,
     </div>
   </div>
 
+  <!-- Roadmap -->
+  <div class="roadmap-wrapper" id="roadmap-section">
+    <div class="roadmap-header">
+      <div class="roadmap-meta">
+        <div class="roadmap-title">🚀 Roadmap</div>
+        <div class="roadmap-badge">Futuristic Learning Path</div>
+      </div>
+    </div>
+
+    <div class="roadmap-progress">
+      <div class="roadmap-progress-row">
+        <div class="roadmap-progress-track">
+          <div class="roadmap-progress-fill"></div>
+        </div>
+        <span class="roadmap-progress-chip" style="display:none"></span>
+      </div>
+      <div class="roadmap-progress-glow"></div>
+    </div>
+
+    <div class="roadmap-timeline">
+      <div class="roadmap-item active-now" data-id="networking">
+        <button class="roadmap-index" type="button" data-id="networking">01</button>
+        <div class="roadmap-content">
+          <div class="roadmap-meta-row">
+            <div class="roadmap-icon">🌐</div>
+            <div class="roadmap-title-small">Networking</div>
+          </div>
+          <p class="roadmap-description">Learn the fundamentals of computer networks and secure connectivity architecture.</p>
+        </div>
+        <a class="roadmap-action" href="https://youtube.com/playlist?list=PLN0OCwSZePjdHb33bAfU0oQ0zWb4w2RDK&si=StBoU3_fH2PjXmPT" target="_blank" rel="noreferrer">Start</a>
+        <button class="roadmap-checkbox" type="button" data-id="networking" title="Mark as completed" aria-label="Mark Networking as completed">
+          <span class="roadmap-checkbox-inner"><span class="roadmap-checkbox-checkmark"></span></span>
+        </button>
+      </div>
+      <div class="roadmap-item" data-id="kali-basics">
+        <button class="roadmap-index" type="button" data-id="kali-basics">02</button>
+        <div class="roadmap-content">
+          <div class="roadmap-meta-row">
+            <div class="roadmap-icon">🐧</div>
+            <div class="roadmap-title-small">Kali Linux Basics</div>
+          </div>
+          <p class="roadmap-description">Get started with the Kali Linux operating system and essential security tooling.</p>
+        </div>
+        <a class="roadmap-action" href="https://youtu.be/B9fGYDM_TU4?si=CgAG_-8-k0R-w4OE" target="_blank" rel="noreferrer">Start</a>
+        <button class="roadmap-checkbox" type="button" data-id="kali-basics" title="Mark as completed" aria-label="Mark Kali Linux Basics as completed">
+          <span class="roadmap-checkbox-inner"><span class="roadmap-checkbox-checkmark"></span></span>
+        </button>
+      </div>
+      <div class="roadmap-item" data-id="kali-tools">
+        <button class="roadmap-index" type="button" data-id="kali-tools">03</button>
+        <div class="roadmap-content">
+          <div class="roadmap-meta-row">
+            <div class="roadmap-icon">🛠️</div>
+            <div class="roadmap-title-small">Kali Linux Top Tools</div>
+          </div>
+          <p class="roadmap-description">Explore the top Kali Linux tools for penetration testing and security research.</p>
+        </div>
+        <a class="roadmap-action" href="" target="_blank" rel="noreferrer">Start</a>
+        <button class="roadmap-checkbox" type="button" data-id="kali-tools" title="Mark as completed" aria-label="Mark Kali Linux Top Tools as completed">
+          <span class="roadmap-checkbox-inner"><span class="roadmap-checkbox-checkmark"></span></span>
+        </button>
+      </div>
+      <div class="roadmap-item" data-id="owasp-top-10">
+        <button class="roadmap-index" type="button" data-id="owasp-top-10">04</button>
+        <div class="roadmap-content">
+          <div class="roadmap-meta-row">
+            <div class="roadmap-icon">🔐</div>
+            <div class="roadmap-title-small">OWASP Top 10</div>
+          </div>
+          <p class="roadmap-description">Master the OWASP Top 10 vulnerabilities and learn how to defend modern applications.</p>
+        </div>
+        <a class="roadmap-action" href="https://youtu.be/BGDX2fMh0C4?si=J0dhOXv-UdjWWx8Y" target="_blank" rel="noreferrer">Start</a>
+        <button class="roadmap-checkbox" type="button" data-id="owasp-top-10" title="Mark as completed" aria-label="Mark OWASP Top 10 as completed">
+          <span class="roadmap-checkbox-inner"><span class="roadmap-checkbox-checkmark"></span></span>
+        </button>
+      </div>
+      <div class="roadmap-item" data-id="bug-bounty">
+        <button class="roadmap-index" type="button" data-id="bug-bounty">05</button>
+        <div class="roadmap-content">
+          <div class="roadmap-meta-row">
+            <div class="roadmap-icon">💰</div>
+            <div class="roadmap-title-small">Bug Bounty</div>
+          </div>
+          <p class="roadmap-description">Learn bug bounty strategies, responsible disclosure, and how to hunt real vulnerabilities.</p>
+        </div>
+        <a class="roadmap-action" href="https://youtube.com/playlist?list=PLOJR6EhNalnu7hgxu7QhA9GrF9i23JX9A&si=ccgGqNdtOwxi1P59" target="_blank" rel="noreferrer">Start</a>
+        <button class="roadmap-checkbox" type="button" data-id="bug-bounty" title="Mark as completed" aria-label="Mark Bug Bounty as completed">
+          <span class="roadmap-checkbox-inner"><span class="roadmap-checkbox-checkmark"></span></span>
+        </button>
+      </div>
+      <div class="roadmap-item" data-id="api-top-10">
+        <button class="roadmap-index" type="button" data-id="api-top-10">06</button>
+        <div class="roadmap-content">
+          <div class="roadmap-meta-row">
+            <div class="roadmap-icon">🔎</div>
+            <div class="roadmap-title-small">API Top 10</div>
+          </div>
+          <p class="roadmap-description">Study the top API security risks and how to secure backend services from attackers.</p>
+        </div>
+        <a class="roadmap-action" href="https://youtube.com/playlist?list=PL-DxAN1jsRa-BzhRSBWCVEa9g4BBTBJ1Y&si=nK68pKzzoxj3ylik" target="_blank" rel="noreferrer">Start</a>
+        <button class="roadmap-checkbox" type="button" data-id="api-top-10" title="Mark as completed" aria-label="Mark API Top 10 as completed">
+          <span class="roadmap-checkbox-inner"><span class="roadmap-checkbox-checkmark"></span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="analytics-section">
+    <div class="section-header">
+      <div class="section-title">
+        📊 Activity Analytics
+        <span class="section-badge">Monthly Record</span>
+      </div>
+    </div>
+    <div class="analytics-grid">
+      <div class="analytics-card">
+        <div class="analytics-card-label">Total completed</div>
+        <div class="analytics-card-value green" id="analytics-total">0</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">This month</div>
+        <div class="analytics-card-value green" id="analytics-monthly">0</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">This week</div>
+        <div class="analytics-card-value green" id="analytics-weekly">0</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">Roadmap completion</div>
+        <div class="analytics-card-value green" id="analytics-completion">0%</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">Roadmap score</div>
+        <div class="analytics-card-value green" id="analytics-score">0</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">Last completed</div>
+        <div class="analytics-card-value green" id="analytics-last-date">Not Completed</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Predefined Tasks -->
   <div class="section-header">
     <div class="section-title">
@@ -1934,6 +2605,7 @@ let state = {
   userName: '',
   theme: 'dark',
   completedIds: [],
+  completedRoadmap: [],
   customTasks: [],
   streak: 0,
   lastCompletedDate: '',
@@ -2090,6 +2762,12 @@ function initApp() {
   const loadedCache = loadCachedRoutineData();
   renderTasks();
   bindScrollRefetch();
+  initRoadmap();
+  bindRoadmapButtons();
+  bindRoadmapCompletion();
+  updateRoadmapUI();
+  updateRoadmapProgress();
+  updateAnalytics();
   animateProgressOnLoad();
 
   if (loadedCache) {
@@ -2390,6 +3068,153 @@ function updateStats() {
   }
 }
 
+function bindRoadmapCompletion() {
+  document.querySelectorAll('.roadmap-index, .roadmap-checkbox').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.stopPropagation();
+      const roadmapId = btn.dataset.id;
+      if (!roadmapId) return;
+      toggleRoadmapComplete(roadmapId);
+    });
+  });
+}
+
+function toggleRoadmapComplete(roadmapId) {
+  const completed = state.completedRoadmap || [];
+  const item = document.querySelector(`.roadmap-item[data-id="${roadmapId}"]`);
+  const title = item?.querySelector('.roadmap-title-small')?.textContent || roadmapId;
+  const isCompleted = completed.includes(roadmapId);
+
+  if (isCompleted) {
+    state.completedRoadmap = completed.filter(id => id !== roadmapId);
+    showToast(`Roadmap item removed: ${title}`, 'info', '↩️');
+    logActivity('roadmap_unchecked', { roadmapId, roadmapTitle: title });
+  } else {
+    state.completedRoadmap = [...completed, roadmapId];
+    showToast(`Roadmap item completed: ${title}`, 'success', '✅');
+    logActivity('roadmap_completed', { roadmapId, roadmapTitle: title });
+  }
+
+  saveState();
+  updateRoadmapUI();
+  updateRoadmapProgress();
+  updateAnalytics();
+}
+
+function updateRoadmapUI() {
+  const completed = state.completedRoadmap || [];
+  document.querySelectorAll('.roadmap-item').forEach(item => {
+    const roadmapId = item.dataset.id;
+    const isCompleted = completed.includes(roadmapId);
+    item.classList.toggle('completed', isCompleted);
+  });
+}
+
+function updateRoadmapProgress() {
+  const completed = state.completedRoadmap || [];
+  const total = document.querySelectorAll('.roadmap-item').length;
+  const count = completed.length;
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  const fill = document.querySelector('.roadmap-progress-fill');
+  const chip = document.querySelector('.roadmap-progress-chip');
+
+  if (fill) {
+    // Animate the width
+    if (typeof gsap !== 'undefined') {
+      gsap.to(fill, {
+        width: pct + '%',
+        duration: 0.8,
+        ease: 'power2.out'
+      });
+    } else {
+      fill.style.width = pct + '%';
+    }
+  }
+
+  if (chip) {
+    if (count === 0) {
+      chip.style.display = 'none';
+    } else {
+      chip.style.display = 'inline-flex';
+      chip.textContent = `${pct}%`;
+    }
+  }
+}
+
+function updateAnalytics() {
+  const completedIds = state.completedRoadmap || [];
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  // Get latest completion timestamps for current completed tasks
+  const completionTimes = completedIds.map(id => {
+    const logs = activityLog.filter(log => log.action === 'roadmap_completed' && log.roadmapId === id);
+    return logs.length > 0 ? new Date(logs[logs.length - 1].timestamp) : null;
+  }).filter(time => time !== null);
+
+  const weekly = completionTimes.filter(time => time >= weekAgo).length;
+  const monthly = completionTimes.filter(time => time >= monthAgo).length;
+
+  const totalRoadmap = document.querySelectorAll('.roadmap-item').length;
+  const completedRoadmap = completedIds.length;
+  const roadmapPct = totalRoadmap ? Math.round((completedRoadmap / totalRoadmap) * 100) : 0;
+  const roadmapScore = completedRoadmap * 10;
+
+  // Find the latest completion among current completed tasks
+  const latestTime = completionTimes.length > 0 ? Math.max(...completionTimes.map(t => t.getTime())) : null;
+  const lastEntry = latestTime ? activityLog.find(log =>
+    log.action === 'roadmap_completed' &&
+    new Date(log.timestamp).getTime() === latestTime &&
+    completedIds.includes(log.roadmapId)
+  ) : null;
+
+  // Animate count-up for numbers (or down)
+  animateCountUp(document.getElementById('analytics-total'), completedRoadmap);
+  animateCountUp(document.getElementById('analytics-weekly'), weekly);
+  animateCountUp(document.getElementById('analytics-monthly'), monthly);
+  animateCountUp(document.getElementById('analytics-score'), roadmapScore);
+
+  // Animate percentage
+  animatePercentage(document.getElementById('analytics-completion'), roadmapPct);
+
+  document.getElementById('analytics-last-date').textContent = lastEntry ? `${lastEntry.date} ${lastEntry.time}` : 'No completions yet';
+
+  // Add glow effect to updated cards
+  document.querySelectorAll('.analytics-card').forEach(card => {
+    card.classList.add('analytics-glow');
+    setTimeout(() => card.classList.remove('analytics-glow'), 800);
+  });
+}
+
+function animateCountUp(element, target) {
+  if (!element) return;
+  const startValue = parseInt(element.textContent.replace(/\D/g, '')) || 0;
+  const duration = 700;
+  const startTime = performance.now();
+  const step = (now) => {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const value = Math.round(startValue + (target - startValue) * progress);
+    element.textContent = value;
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function animatePercentage(element, targetPct) {
+  if (!element) return;
+  const startPct = parseInt(element.textContent.replace('%', '')) || 0;
+  const duration = 700;
+  const startTime = performance.now();
+  const step = (now) => {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const pct = Math.round(startPct + (targetPct - startPct) * progress);
+    element.textContent = `${pct}%`;
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
 // =========== ACTIVE TASK ===========
 function isActiveNow(task) {
   if (!task.start || !task.end) return false;
@@ -2605,6 +3430,31 @@ function viewActivityLog() {
   document.body.appendChild(modal);
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.remove();
+  });
+}
+
+function initRoadmap() {
+  const roadmapItems = document.querySelectorAll('.roadmap-item');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.25 });
+
+  roadmapItems.forEach(item => observer.observe(item));
+}
+
+function bindRoadmapButtons() {
+  document.querySelectorAll('.roadmap-item .roadmap-action').forEach(btn => {
+    btn.addEventListener('click', (event) => {
+      const item = event.currentTarget.closest('.roadmap-item');
+      document.querySelectorAll('.roadmap-item').forEach(i => i.classList.remove('active-now'));
+      item.classList.add('active-now');
+      showToast('Opening roadmap resource...', 'success', '🔗');
+    });
   });
 }
 
