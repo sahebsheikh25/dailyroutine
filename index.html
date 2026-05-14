@@ -3,415 +3,701 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DayFlow — Nandani Kumari's Daily Routine</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<title>SN Tracker — Session Expired</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
   :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a24;
-    --border: rgba(255,255,255,0.07);
-    --accent: #7c6ff7;
-    --accent2: #f97316;
-    --accent3: #22d3ee;
-    --text: #f0f0fa;
-    --muted: #6b6b8a;
-    --success: #4ade80;
-    --glow: rgba(124,111,247,0.15);
-    --font-head: 'Syne', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
-    --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+    --neon-cyan: #00f5ff;
+    --neon-red: #ff003c;
+    --neon-orange: #ff6b00;
+    --neon-purple: #bf00ff;
+    --grid-color: rgba(0, 245, 255, 0.04);
+    --glass-bg: rgba(5, 15, 30, 0.72);
+    --glass-border: rgba(0, 245, 255, 0.18);
+    --text-primary: #e8f4ff;
+    --text-secondary: rgba(160, 210, 240, 0.75);
   }
 
-  *, *::before, *::after { 
-    box-sizing: border-box; 
-    margin: 0; 
-    padding: 0; 
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  html, body {
+    width: 100%; height: 100%;
     overflow: hidden;
+    font-family: 'Rajdhani', sans-serif;
+    background: #020810;
+    color: var(--text-primary);
   }
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: 
-      radial-gradient(circle at 20% 80%, rgba(124,111,247,0.15) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(34,211,238,0.15) 0%, transparent 50%);
-    pointer-events: none;
+  /* ── Canvas particles ── */
+  #canvas {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
     z-index: 0;
-    animation: gradientShift 8s ease-in-out infinite;
   }
 
-  @keyframes gradientShift {
-    0%, 100% { transform: translate(0, 0) }
-    50% { transform: translate(20px, -20px) }
+  /* ── Cyber grid overlay ── */
+  .grid-overlay {
+    position: fixed; inset: 0; z-index: 1;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridShift 20s linear infinite;
+  }
+  @keyframes gridShift {
+    0% { background-position: 0 0, 0 0; }
+    100% { background-position: 60px 60px, 60px 60px; }
   }
 
-  .login-wrapper {
-    position: relative;
-    z-index: 1;
-    text-align: center;
+  /* ── Scan line ── */
+  .scanline {
+    position: fixed; inset: 0; z-index: 2;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 245, 255, 0.012) 2px,
+      rgba(0, 245, 255, 0.012) 4px
+    );
+    pointer-events: none;
   }
 
-  .welcome-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 60px 40px;
-    max-width: 420px;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-    animation: slideUp 0.6s cubic-bezier(0.34,1.56,0.64,1);
-  }
-
-  .welcome-box::before {
+  /* ── Corner brackets ── */
+  .corner { position: fixed; width: 60px; height: 60px; z-index: 3; }
+  .corner::before, .corner::after {
     content: '';
     position: absolute;
-    top: -60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 200px;
-    background: var(--accent);
+    background: var(--neon-cyan);
+    box-shadow: 0 0 8px var(--neon-cyan);
+  }
+  .corner::before { width: 2px; height: 100%; }
+  .corner::after  { width: 100%; height: 2px; }
+  .corner.tl { top: 20px; left: 20px; }
+  .corner.tr { top: 20px; right: 20px; transform: scaleX(-1); }
+  .corner.bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+  .corner.br { bottom: 20px; right: 20px; transform: scale(-1); }
+
+  /* ── Status bar ── */
+  .status-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 36px; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    background: rgba(0, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(0, 245, 255, 0.1);
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(0, 245, 255, 0.5);
+  }
+  .status-bar .dot {
+    display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--neon-red);
+    box-shadow: 0 0 6px var(--neon-red);
+    margin-right: 6px;
+    animation: blink 1.2s step-end infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* ── Main layout ── */
+  .scene {
+    position: fixed; inset: 0; z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+
+  /* ── Glass card ── */
+  .card {
+    position: relative;
+    width: min(520px, 100%);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+    padding: 48px 40px 44px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    text-align: center;
+    animation: cardEntrance 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+    overflow: hidden;
+  }
+  @keyframes cardEntrance {
+    from { opacity: 0; transform: translateY(40px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Card glow layers */
+  .card::before {
+    content: '';
+    position: absolute; inset: -1px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, rgba(255,0,60,0.3), transparent 40%, rgba(0,245,255,0.15));
+    z-index: -1;
+    animation: glowPulse 3s ease-in-out infinite alternate;
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-red) 30%, var(--neon-cyan) 70%, transparent);
+    animation: toplineGlow 3s ease-in-out infinite alternate;
+  }
+  @keyframes glowPulse {
+    from { opacity: 0.6; }
+    to   { opacity: 1; }
+  }
+  @keyframes toplineGlow {
+    from { opacity: 0.5; }
+    to   { opacity: 1; }
+  }
+
+  /* ── Card corner accents ── */
+  .card-corner {
+    position: absolute; width: 20px; height: 20px;
+  }
+  .card-corner::before, .card-corner::after {
+    content: ''; position: absolute; background: var(--neon-red);
+    box-shadow: 0 0 6px var(--neon-red);
+  }
+  .card-corner::before { width: 1.5px; height: 100%; }
+  .card-corner::after  { height: 1.5px; width: 100%; }
+  .card-corner.tl { top: 12px; left: 12px; }
+  .card-corner.tr { top: 12px; right: 12px; transform: scaleX(-1); }
+  .card-corner.bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
+  .card-corner.br { bottom: 12px; right: 12px; transform: scale(-1); }
+
+  /* ── Warning icon ── */
+  .icon-wrap {
+    position: relative;
+    width: 88px; height: 88px;
+    margin: 0 auto 28px;
+    animation: iconFloat 4s ease-in-out infinite;
+  }
+  @keyframes iconFloat {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-8px); }
+  }
+
+  .icon-ring {
+    position: absolute; inset: 0;
     border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.2;
-    pointer-events: none;
+    border: 1.5px solid rgba(255, 0, 60, 0.5);
+    animation: ringPulse 2.4s ease-in-out infinite;
+  }
+  .icon-ring:nth-child(2) {
+    inset: -10px;
+    border-color: rgba(255, 0, 60, 0.25);
+    animation-delay: 0.4s;
+  }
+  .icon-ring:nth-child(3) {
+    inset: -22px;
+    border-color: rgba(255, 0, 60, 0.1);
+    animation-delay: 0.8s;
+  }
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50%       { transform: scale(1.05); opacity: 1; }
   }
 
-  .welcome-emoji {
-    font-size: 64px;
-    display: block;
-    margin-bottom: 20px;
-    animation: float 3s ease-in-out infinite;
+  .icon-core {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, rgba(255,80,80,0.2), rgba(255,0,60,0.08));
+    border: 1.5px solid rgba(255, 0, 60, 0.6);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(255,0,60,0.3), inset 0 0 20px rgba(255,0,60,0.08);
   }
 
-  .welcome-title {
-    font-family: var(--font-head);
-    font-size: 32px;
-    font-weight: 800;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--accent), var(--accent3));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  .shield-svg {
+    width: 40px; height: 40px;
+    filter: drop-shadow(0 0 8px rgba(255,0,60,0.9)) drop-shadow(0 0 20px rgba(255,0,60,0.4));
+    animation: shieldPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes shieldPulse {
+    0%, 100% { filter: drop-shadow(0 0 6px rgba(255,0,60,0.8)) drop-shadow(0 0 16px rgba(255,0,60,0.3)); }
+    50%       { filter: drop-shadow(0 0 12px rgba(255,0,60,1))  drop-shadow(0 0 28px rgba(255,0,60,0.6)); }
   }
 
-  .welcome-subtitle {
-    color: var(--muted);
-    font-size: 15px;
-    margin-bottom: 32px;
-    line-height: 1.6;
+  /* ── Alert label ── */
+  .alert-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--neon-red);
+    text-shadow: 0 0 10px var(--neon-red);
+    margin-bottom: 14px;
+    animation: labelFlicker 5s infinite;
+  }
+  @keyframes labelFlicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.3; }
+    97% { opacity: 1; }
+    98% { opacity: 0.5; }
+    99% { opacity: 1; }
   }
 
-  .welcome-name {
-    font-size: 28px;
+  /* ── Headline ── */
+  .headline {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(17px, 3.5vw, 22px);
     font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 24px;
-    font-family: var(--font-head);
+    color: var(--text-primary);
+    line-height: 1.35;
+    margin-bottom: 16px;
+    text-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
+    letter-spacing: 0.02em;
   }
 
-  .welcome-btn {
-    background: linear-gradient(135deg, var(--accent), var(--accent3));
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 16px 32px;
-    font-family: var(--font-head);
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 0.03em;
-    transition: transform 0.2s, box-shadow 0.2s;
-    min-width: 200px;
+  /* ── Divider ── */
+  .divider {
+    width: 100%; height: 1px; margin: 0 auto 18px;
+    background: linear-gradient(90deg, transparent, rgba(0,245,255,0.25) 40%, rgba(255,0,60,0.25) 60%, transparent);
   }
 
-  .welcome-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 32px rgba(124,111,247,0.4);
-  }
-
-  .welcome-btn:active {
-    transform: translateY(0);
-  }
-
-  .welcome-footer {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-  }
-
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0) }
-    50% { transform: translateY(-12px) }
-  }
-
-  .loading-text {
-    color: var(--muted);
+  /* ── Description ── */
+  .description {
     font-size: 14px;
-    margin-top: 20px;
-    animation: pulse-text 1.5s ease-in-out infinite;
+    font-weight: 400;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    letter-spacing: 0.02em;
   }
 
-  @keyframes pulse-text {
-    0%, 100% { opacity: 0.6 }
-    50% { opacity: 1 }
+  /* ── Timer badge ── */
+  .timer-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255, 0, 60, 0.08);
+    border: 1px solid rgba(255, 0, 60, 0.25);
+    border-radius: 2px;
+    padding: 6px 16px;
+    margin-bottom: 32px;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: rgba(255, 100, 100, 0.9);
+  }
+  .timer-badge .dot-red {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--neon-red);
+    box-shadow: 0 0 6px var(--neon-red);
+    animation: blink 1.2s step-end infinite;
+    flex-shrink: 0;
+  }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex; gap: 14px; flex-wrap: wrap;
+  }
+
+  .btn {
+    flex: 1; min-width: 140px;
+    padding: 14px 20px;
+    border-radius: 2px;
+    border: 1px solid;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    text-transform: uppercase;
+  }
+  .btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .btn:hover::before { opacity: 1; }
+  .btn:active { transform: scale(0.97); }
+
+  /* Continue button */
+  .btn-continue {
+    background: rgba(0, 245, 255, 0.06);
+    border-color: rgba(0, 245, 255, 0.45);
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px rgba(0,245,255,0.5);
+    box-shadow: 0 0 0 rgba(0,245,255,0);
+  }
+  .btn-continue::before {
+    background: rgba(0, 245, 255, 0.07);
+  }
+  .btn-continue:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0,245,255,0.3), 0 0 60px rgba(0,245,255,0.1), inset 0 0 20px rgba(0,245,255,0.06);
+    text-shadow: 0 0 16px var(--neon-cyan);
+  }
+
+  /* Login button */
+  .btn-login {
+    background: rgba(255, 0, 60, 0.06);
+    border-color: rgba(255, 0, 60, 0.45);
+    color: #ff6680;
+    text-shadow: 0 0 10px rgba(255,0,60,0.4);
+    box-shadow: 0 0 0 rgba(255,0,60,0);
+  }
+  .btn-login::before {
+    background: rgba(255, 0, 60, 0.07);
+  }
+  .btn-login:hover,
+  .btn-login.glow {
+    border-color: var(--neon-red);
+    box-shadow: 0 0 20px rgba(255,0,60,0.3), 0 0 60px rgba(255,0,60,0.1), inset 0 0 20px rgba(255,0,60,0.06);
+    color: #ff4d6a;
+    text-shadow: 0 0 16px var(--neon-red);
+  }
+  .btn-login.glow {
+    animation: clickGlowPulse 1s ease forwards;
+  }
+  @keyframes clickGlowPulse {
+    0% { transform: scale(1); box-shadow: 0 0 24px rgba(255,0,60,0.3), inset 0 0 12px rgba(255,0,60,0.12); }
+    50% { transform: scale(1.03); box-shadow: 0 0 42px rgba(255,0,60,0.45), inset 0 0 20px rgba(255,0,60,0.2); }
+    100% { transform: scale(1); box-shadow: 0 0 28px rgba(255,0,60,0.25), inset 0 0 16px rgba(255,0,60,0.14); }
+  }
+
+  .redirecting-indicator {
+    display: none;
+    margin: 18px auto 0;
+    gap: 10px;
+    padding: 12px 16px;
+    max-width: 320px;
+    color: #ffb2c7;
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    background: rgba(255, 0, 60, 0.08);
+    border: 1px solid rgba(255, 0, 60, 0.22);
+    border-radius: 999px;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 18px rgba(255,0,60,0.08);
+  }
+  .redirecting-indicator.visible {
+    display: inline-flex;
+  }
+  .redirecting-indicator .spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255,255,255,0.18);
+    border-top-color: rgba(255,0,60,0.9);
+    border-radius: 50%;
+    animation: spin 0.85s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .scene.redirecting .card {
+    transform: scale(0.98);
+    opacity: 0.94;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+  }
+
+  /* ── Bottom info bar ── */
+  .card-footer {
+    margin-top: 28px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: rgba(100, 150, 180, 0.45);
+    font-family: 'Orbitron', monospace;
+    border-top: 1px solid rgba(0, 245, 255, 0.07);
+    padding-top: 18px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  /* ── Page fade in ── */
+  body {
+    animation: pageFade 0.6s ease both;
+  }
+  @keyframes pageFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── Home page overlay (hidden) ── */
+  #homePage {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: #020810;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+    animation: pageFade 0.6s ease both;
+  }
+  #homePage.show { display: flex; }
+  #homePage h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px; font-weight: 900;
+    color: var(--neon-cyan);
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 30px var(--neon-cyan);
+  }
+  #homePage p {
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-secondary);
+    font-size: 16px; letter-spacing: 0.08em;
   }
 
   @media (max-width: 480px) {
-    .welcome-box {
-      padding: 40px 24px;
-      border-radius: 20px;
-    }
-
-    .welcome-title {
-      font-size: 26px;
-    }
-
-    .welcome-emoji {
-      font-size: 48px;
-    }
-
-    .welcome-btn {
-      width: 100%;
-      min-width: auto;
-    }
+    .card { padding: 36px 24px 32px; }
+    .btn-row { flex-direction: column; }
+    .corner { width: 40px; height: 40px; }
+    .status-bar { font-size: 7px; padding: 0 14px; }
+    .card-footer { flex-direction: column; gap: 6px; }
   }
-  /* ===== MOBILE OVERFLOW FIX ===== */
-
-html, body {
-  width: 100%;
-  overflow-x: hidden;
-}
-
-* {
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.app-wrapper {
-  width: 100%;
-  overflow-x: hidden;
-}
-
-header,
-.hero-section,
-.stats-row,
-.progress-section,
-.task-card,
-.tasks-grid,
-.section-header,
-.add-task-section,
-.bottom-actions {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-@media (max-width: 768px) {
-
-  body {
-    overflow-x: hidden;
-  }
-
-  .app-wrapper {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .header-actions {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .icon-btn {
-    width: 42px;
-    height: 42px;
-    flex-shrink: 0;
-  }
-
-  .hero-section {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .clock-display {
-    width: 100%;
-    text-align: left;
-    word-break: break-word;
-  }
-
-  .task-card {
-    overflow: hidden;
-  }
-
-  .task-name,
-  .task-details {
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-
-  .scroll-refresh-popup {
-    left: 12px;
-    right: 12px;
-    width: auto;
-    transform: none;
-  }
-  @media (max-width:768px){
-
-  .scroll-refresh-popup{
-    position: fixed;
-    top: 12px !important;
-    left: 12px !important;
-    right: 12px !important;
-    width: auto !important;
-    max-width: calc(100vw - 24px);
-    transform: none !important;
-
-    padding: 12px 14px;
-    border-radius: 14px;
-
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    z-index: 99999;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-
-  .scroll-refresh-popup.visible{
-    transform: none !important;
-  }
-
-  .refresh-title{
-    font-size: 13px;
-  }
-
-  .refresh-subtitle{
-    font-size: 11px;
-    line-height: 1.4;
-  }
-
-  .refresh-icon{
-    width: 38px;
-    height: 38px;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-
-}
-
-  footer {
-    width: 100%;
-    padding: 0 12px;
-    text-align: center;
-  }
-}
 </style>
-
 </head>
 <body>
 
-<div class="login-wrapper">
-  <div class="welcome-box">
-    <span class="welcome-emoji">🌟</span>
-    <h1 class="welcome-title">Welcome Back</h1>
-    <p class="welcome-subtitle">Your Daily Routine Tracker</p>
-    
-    <div class="welcome-name" id="user-display">Loading...</div>
-    
-    <button class="welcome-btn" onclick="startApp()">Start Tracking →</button>
-    
-    <p class="loading-text" id="loading-status">Initializing Nandani's profile...</p>
-    
-    <div class="welcome-footer">
-      🔒 All your data is saved locally and securely.
+<canvas id="canvas"></canvas>
+<div class="grid-overlay"></div>
+<div class="scanline"></div>
+
+<!-- Corner brackets -->
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <span><span class="dot"></span>SECURITY ALERT — SESSION TERMINATED</span>
+  <span id="currentTime"></span>
+  <span>SN TRACKER v2.4.1</span>
+</div>
+
+<!-- Inactivity card -->
+<div class="scene" id="inactivityPage">
+  <div class="card">
+    <div class="card-corner tl"></div>
+    <div class="card-corner tr"></div>
+    <div class="card-corner bl"></div>
+    <div class="card-corner br"></div>
+
+    <!-- Icon -->
+    <div class="icon-wrap">
+      <div class="icon-ring"></div>
+      <div class="icon-ring"></div>
+      <div class="icon-ring"></div>
+      <div class="icon-core">
+        <svg class="shield-svg" viewBox="0 0 40 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 2L4 9V22C4 31.94 11.06 41.26 20 44C28.94 41.26 36 31.94 36 22V9L20 2Z" stroke="#ff003c" stroke-width="2" stroke-linejoin="round" fill="rgba(255,0,60,0.08)"/>
+          <line x1="20" y1="15" x2="20" y2="24" stroke="#ff4466" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="20" cy="30" r="1.5" fill="#ff4466"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Alert label -->
+    <div class="alert-label">⬡ SESSION SECURITY ALERT ⬡</div>
+
+    <!-- Headline -->
+    <h1 class="headline">You haven't opened the app for 24&nbsp;hours, so this session has been closed.</h1>
+
+    <div class="divider"></div>
+
+    <!-- Description -->
+    <p class="description">
+      For security and activity tracking reasons, your previous session expired. All active connections have been securely terminated.
+    </p>
+
+    <!-- Timer badge -->
+    <div class="timer-badge">
+      <span class="dot-red"></span>
+      <span id="inactiveLabel">INACTIVE FOR 24H 00M</span>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+      <button class="btn btn-continue" onclick="handleContinue()">⟶ &nbsp;Continue</button>
+      <button class="btn btn-login" id="loginAgainBtn" onclick="handleLogin()">⟲ &nbsp;Login Again</button>
+    </div>
+    <div class="redirecting-indicator" id="redirectIndicator" aria-live="polite">
+      <span class="spinner"></span>
+      <span id="redirectText">Ready to reconnect.</span>
+    </div>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <span>SESSION ID: <span id="sessionId"></span></span>
+      <span>AUTO-LOCK PROTOCOL ACTIVE</span>
     </div>
   </div>
 </div>
 
+<!-- Home page (shown after Continue/Login) -->
+<div id="homePage">
+  <h1>SN TRACKER</h1>
+  <p>Welcome back. Session restored.</p>
+</div>
+
 <script>
-  // Initialize Nandani profile on first load
-  function initializeNandani() {
-    const NANDANI_ID = 'nandani_2026';
-    const userName = 'Nandani Kumari';
-    
-    // Create user if doesn't exist
-    let users = JSON.parse(localStorage.getItem('dayflow_users') || '{}');
-    
-    if (!users[NANDANI_ID]) {
-      users[NANDANI_ID] = {
-        id: NANDANI_ID,
-        name: userName,
-        email: 'nandani@dayflow.local',
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString()
-      };
-      localStorage.setItem('dayflow_users', JSON.stringify(users));
-    } else {
-      // Update last login
-      users[NANDANI_ID].lastLogin = new Date().toISOString();
-      localStorage.setItem('dayflow_users', JSON.stringify(users));
+// ── Particle system ──
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const PARTICLE_COUNT = 90;
+const particles = [];
+
+function randomColor() {
+  const colors = [
+    'rgba(0,245,255,', 'rgba(0,200,255,', 'rgba(255,0,60,',
+    'rgba(180,0,255,', 'rgba(0,245,255,'
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  particles.push({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: Math.random() * 1.4 + 0.3,
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: (Math.random() - 0.5) * 0.4,
+    alpha: Math.random() * 0.6 + 0.15,
+    color: randomColor(),
+    pulse: Math.random() * Math.PI * 2,
+    pulseSpeed: 0.02 + Math.random() * 0.02
+  });
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    p.pulse += p.pulseSpeed;
+    const a = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.color + a + ')';
+    ctx.fill();
+
+    // Connect nearby particles
+    for (let j = i + 1; j < particles.length; j++) {
+      const q = particles[j];
+      const dx = p.x - q.x, dy = p.y - q.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 110) {
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(q.x, q.y);
+        ctx.strokeStyle = p.color + (0.06 * (1 - dist / 110)) + ')';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
     }
-    
-    // Set as current user
-    localStorage.setItem('dayflow_current_user', JSON.stringify({
-      id: NANDANI_ID,
-      name: userName
-    }));
-    
-    // Display name
-    document.getElementById('user-display').textContent = `👋 Hi, ${userName}!`;
-    document.getElementById('loading-status').textContent = 'Ready to crush your goals today!';
+
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
   }
 
-  function startApp() {
-    window.location.href = 'routine-tracker.html';
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ── Clock ──
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('currentTime').textContent = h + ':' + m + ':' + s;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Session ID ──
+document.getElementById('sessionId').textContent = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+// ── Inactivity logic ──
+const INACTIVITY_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function getLastActive() {
+  try {
+    const ts = localStorage.getItem('sn_last_active');
+    return ts ? parseInt(ts, 10) : null;
+  } catch { return null; }
+}
+
+function setLastActive() {
+  try { localStorage.setItem('sn_last_active', Date.now().toString()); } catch {}
+}
+
+function checkInactivity() {
+  const last = getLastActive();
+  if (!last) {
+    // First time — set timestamp and go to home
+    setLastActive();
+    goHome();
+    return;
   }
+  const diff = Date.now() - last;
+  if (diff >= INACTIVITY_MS) {
+    showInactivity(diff);
+  } else {
+    setLastActive();
+    goHome();
+  }
+}
 
-  // Initialize on load
-  window.addEventListener('DOMContentLoaded', () => {
-    initializeNandani();
-    
-    // Auto-redirect after 2 seconds
-    setTimeout(() => {
-      // Optionally auto-start, uncomment below
-      // startApp();
-    }, 2000);
-  });
+function showInactivity(diffMs) {
+  const hours = Math.floor(diffMs / 3600000);
+  const mins  = Math.floor((diffMs % 3600000) / 60000);
+  document.getElementById('inactiveLabel').textContent =
+    `INACTIVE FOR ${String(hours).padStart(2,'0')}H ${String(mins).padStart(2,'0')}M`;
+  document.getElementById('inactivityPage').style.display = 'flex';
+}
 
-  // Enter key to start
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') startApp();
-  });
+function goHome() {
+  document.getElementById('inactivityPage').style.display = 'none';
+  document.getElementById('homePage').classList.add('show');
+}
+
+function handleContinue() {
+  setLastActive();
+  goHome();
+}
+
+function handleLogin() {
+  const loginButton = document.getElementById('loginAgainBtn');
+  const redirectIndicator = document.getElementById('redirectIndicator');
+
+  if (loginButton) {
+    loginButton.disabled = true;
+    loginButton.classList.add('glow');
+  }
+  if (redirectIndicator) {
+    redirectIndicator.classList.add('visible');
+    document.getElementById('redirectText').textContent = 'Redirecting...';
+  }
+  document.getElementById('inactivityPage').classList.add('redirecting');
+  setLastActive();
+
+  setTimeout(() => {
+    window.location.href = 'login.html';
+  }, 1000);
+}
+
+// ── For demo: override with a 25-hour-old timestamp to always show the page ──
+// Comment this out in production
+try { localStorage.setItem('sn_last_active', (Date.now() - 25 * 3600000).toString()); } catch {}
+
+checkInactivity();
 </script>
-
-
-
 </body>
 </html>

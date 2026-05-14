@@ -709,6 +709,28 @@ header{
     gap: 16px;
     animation: slideUp 0.6s ease 0.4s both;
   }
+  .tasks-grid.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    padding: 20px;
+  }
+  .empty-task-state {
+    width: 100%;
+    max-width: 560px;
+    padding: 18px 22px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
+    text-align: center;
+    letter-spacing: 0.04em;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.12);
+    animation: fadeIn 0.5s ease both;
+  }
 
   .task-card {
     background: rgba(255, 255, 255, 0.03);
@@ -2662,7 +2684,9 @@ header,
       <span class="section-badge" id="predefined-count">13 tasks</span>
     </div>
   </div>
-  <div class="tasks-grid" id="predefined-tasks"></div>
+  <div class="tasks-grid" id="predefined-tasks">
+    <div class="empty-task-state" id="empty-predefined">No routine tasks available yet.</div>
+  </div>
 
   <!-- Custom Tasks -->
   <div class="section-header" style="margin-top:28px">
@@ -2672,7 +2696,7 @@ header,
     </div>
   </div>
   <div class="tasks-grid" id="custom-tasks">
-    <div style="color:var(--muted); font-size:14px; padding:12px 0; text-align:center;" id="empty-custom">No custom tasks yet. Add one below!</div>
+    <div class="empty-task-state" id="empty-custom">No custom tasks yet. Add one below!</div>
   </div>
 
   <!-- Add Task -->
@@ -3347,6 +3371,14 @@ async function manualRefreshRoutines() {
   renderTasks();
   showToast(changed ? '✓ Routines refreshed from Sheets!' : '✓ No updates found', 'info');
 }
+function getVisiblePredefinedTasks() {
+  return PREDEFINED.filter(t => t && t.name && t.name.toString().trim());
+}
+
+function getVisibleCustomTasks() {
+  return state.customTasks.filter(t => t && t.name && t.name.toString().trim());
+}
+
 function renderTasks() {
   renderPredefined();
   renderCustom();
@@ -3355,12 +3387,22 @@ function renderTasks() {
 
 function renderPredefined() {
   const container = document.getElementById('predefined-tasks');
+  const empty = document.getElementById('empty-predefined');
+  const visibleTasks = getVisiblePredefinedTasks();
   container.innerHTML = '';
-  PREDEFINED.forEach((t, i) => {
+  container.classList.toggle('empty', visibleTasks.length === 0);
+
+  if (visibleTasks.length === 0) {
+    empty && container.appendChild(empty);
+    document.getElementById('predefined-count').textContent = '0 tasks';
+    return;
+  }
+
+  visibleTasks.forEach((t, i) => {
     const done = state.completedIds.includes(t.id);
     const active = isActiveNow(t);
     const card = document.createElement('div');
-    card.className = `task-card${done?' done':''}${active&&!done?' active-now':''}`;
+    card.className = `task-card${done ? ' done' : ''}${active && !done ? ' active-now' : ''}`;
     card.style.animationDelay = (i * 0.04) + 's';
     card.innerHTML = `
       <div class="task-left">
@@ -3375,30 +3417,34 @@ function renderPredefined() {
         </div>
       </div>
       <div class="task-right">
-        ${active&&!done ? '<div class="now-pill"><span class="now-dot"></span>NOW</div>' : ''}
+        ${active && !done ? '<div class="now-pill"><span class="now-dot"></span>NOW</div>' : ''}
         ${done ? '<div class="task-tag" style="color:var(--success);border-color:rgba(74,222,128,0.3)">✓ Done</div>' : ''}
       </div>
     `;
     card.addEventListener('click', () => toggleTask(t.id, card));
     container.appendChild(card);
   });
-  document.getElementById('predefined-count').textContent = `${PREDEFINED.length} tasks`;
+  document.getElementById('predefined-count').textContent = `${visibleTasks.length} tasks`;
 }
 
 function renderCustom() {
   const container = document.getElementById('custom-tasks');
   const empty = document.getElementById('empty-custom');
+  const visibleTasks = getVisibleCustomTasks();
   container.innerHTML = '';
-  if (state.customTasks.length === 0) {
+  container.classList.toggle('empty', visibleTasks.length === 0);
+
+  if (visibleTasks.length === 0) {
     empty && container.appendChild(empty);
     document.getElementById('custom-count').textContent = '0 tasks';
     return;
   }
-  document.getElementById('custom-count').textContent = `${state.customTasks.length} tasks`;
-  state.customTasks.forEach((t, i) => {
+
+  document.getElementById('custom-count').textContent = `${visibleTasks.length} tasks`;
+  visibleTasks.forEach((t, i) => {
     const done = state.completedIds.includes(t.id);
     const card = document.createElement('div');
-    card.className = `task-card custom-task${done?' done':''}`;
+    card.className = `task-card custom-task${done ? ' done' : ''}`;
     card.style.animationDelay = (i * 0.04) + 's';
     card.innerHTML = `
       <div class="task-left">
@@ -3465,7 +3511,9 @@ function toggleTask(id, cardEl) {
 let currentProgress = 0;
 
 function updateStats() {
-  const allIds = [...PREDEFINED.map(t=>t.id), ...state.customTasks.map(t=>t.id)];
+  const visiblePredefined = getVisiblePredefinedTasks();
+  const visibleCustom = getVisibleCustomTasks();
+  const allIds = [...visiblePredefined.map(t => t.id), ...visibleCustom.map(t => t.id)];
   const total = allIds.length;
   const done = state.completedIds.filter(id => allIds.includes(id)).length;
   const pct = total > 0 ? Math.round(done / total * 100) : 0;
